@@ -1,0 +1,104 @@
+/*
+	The following shows an example config you can use to create your bots.
+
+	Please note that all comments must be removed before being allowed to execute.
+	You may keep this example config to be able to refer to the comments
+*/
+{
+	// A string with your possible nicks. This is used for the bot's real name.
+	// each bot will use the format ${OwnerNick}'s bot
+	"OwnerNicks": "Change, Me, Please",
+
+	"Networks": {
+		"example": [
+			// Each server consists of host:port. If no :port is given, 6667 is assumed.
+			// You can specify SSL by using +
+			"server1.example.com",
+			"server2.example.com:6667"
+		],
+		"ggxy": [
+			"navi.gamergalaxy.net:+6697",
+			"rana.gamergalaxy.net:+6697",
+		]
+	},
+	// A bot group is basically an entity. Each entity controlls the network its bots connect
+	// to. Each bot can have individual settings and modules.
+	"BotGroups": {
+		// The first bot group name. Used purely for reference
+		"d*bot": {
+			"Networks": [
+				"example", "ggxy"
+			],
+			 // The list of bots/connections. Must have at leat 1 bot.
+			"Bots": {
+				// The bot alias. Even if the nick changes, the bot will still be referenced
+				// by this "alias". 
+				"DaBot":{
+					"Nick":"DaBot",
+					"Ident":"thebotidentity",
+					// Individual channel and modules this but will have
+					"Channels":["#secret password"],
+					"Modules":["dtime"]
+				}
+			},
+			// Channels that all bots in this group must join. You can add password too
+			"Channels": [
+				"#channel1",
+				"#channel2 channel2pass"
+			],
+			// Modules every bot must load.
+			"Modules": ["Commands"]
+		},
+		// A second bot group
+		"cibby": {
+			"Networks": [
+				"ggxy"
+			],
+			"Bots": {
+				"Cibby":{
+					"Nick":"Cibby",
+					"Ident":"dabitp",
+					// Individual channel and modules this but will have
+					"Channels":["#secret password"],
+					"Modules":["dtime"]
+				}
+			},
+			// Channels that all bots in this group must be in (cannot part)
+			"Channels": [
+				"#channel1",
+				"#channel2 channel2pass"
+			],
+			// Modules every bot must load.
+			"Modules": ["Commands"]
+		}
+	},
+	"Auth": [
+		/*
+			Users can be a mix of nick!ident@host. Use * for wildcards.
+			Levels range from 1-3. Non-logged in users are level 1.
+			Level 2 can be used for other purposes and level 3 is used for
+			raw commands and such.
+
+			A password can have an encryption function that is used to encrypt a function
+			passed in by the user. The function prototype looks like the following:
+
+			function enc(pw) { your code here }
+
+			A user can also be bound to only login to a certain bot group(s).
+		*/
+		{
+			"login": "*!ident@host",
+			"password": "123abc",
+			"encryption":"{ return pw; }",
+			"level":3
+		},
+
+		{
+			"login": "josh!*@*",
+			"password": "123abc",
+			"encryption":"{ return pw; }",
+			"level":2,
+			"BotGroup":["cibby"]
+		}
+	]
+}

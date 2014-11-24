@@ -1,3 +1,5 @@
+//var Proxy = require('proxy');
+
 exports.NoSuchMethodTrap = Proxy.create({
   // FIXME: don't know why I need to provide this method,
   // JS complains if getPropertyDescriptor is left out, or returns undefined
