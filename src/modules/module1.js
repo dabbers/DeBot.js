@@ -1,4 +1,4 @@
-var DeBot = require('./Module');
+var DeBot = require('../core/Module');
 
 module.exports = new (DeBot.module(function (bot) {
 	bot.on("hi", function() { 
