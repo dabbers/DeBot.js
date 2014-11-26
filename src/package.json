@@ -1,0 +1,29 @@
+{
+  "name": "DeBot.js",
+  "version": "0.0.0",
+  "description": "A javascript IRC Bot designed for easy API use, and powerful flexability.",
+  "main": "index.js",
+  "dependencies": {
+    "dabbit.base": "^0.4.1",
+    "js-priority-queue": "^0.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dabbers/DeBot.js"
+  },
+  "keywords": [
+    "debot",
+    "irc",
+    "javascript"
+  ],
+  "author": "dab <me@davidbarajas.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dabbers/DeBot.js/issues"
+  },
+  "homepage": "https://github.com/dabbers/DeBot.js"
+}

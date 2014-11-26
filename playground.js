@@ -20,7 +20,12 @@ fs.readFile( "src/config.json", function (err, data) {
     throw err; 
   }
   var tmp = JSON.parse(data.toString());
-  console.log(tmp.BotGroups);
-  eval("function encrypt(pw) " + tmp.Auth[1].encryption);
-  console.log(encrypt("HELLO"));
+  tmp.BotGroups["d*bot"].Bots["DaBot"].Channels.push("#dab.beta");
+  fs.writeFile("src/config.json",JSON.stringify(tmp, null, 4), function(err) {
+    if(err) {
+        console.log(err);
+    } else {
+        console.log("The file was saved!");
+    }
+}); 
 });

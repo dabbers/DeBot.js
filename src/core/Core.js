@@ -23,8 +23,7 @@ exports.createBot = function(botName, settings) {
 	else {
 		group = exports.addGroup(settings.group.name, settings.group);
 	}
-	var bot = new Bot(botName, settings);
-	bot.group = group;
+	var bot = new Bot(botName, group, settings);
 	group.addBot(bot);
 }
 	

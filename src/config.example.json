@@ -9,6 +9,12 @@
 	// each bot will use the format ${OwnerNick}'s bot
 	"OwnerNicks": "Change, Me, Please",
 
+	// This setting lets you determine the fallback option for determining when a user is to
+	// be logged out. You can use either a channel requirement, or use the ISON option. To use ISON,
+	// enter an integer representing the number of seconds between each ISON request that should be used.
+	// A suggested number is somewhere between 600 seconds (10 minutes) and 1,800 seconds (30 minutes)
+	"AuthVerification":"#channel",
+
 	"Networks": {
 		"example": [
 			// Each server consists of host:port. If no :port is given, 6667 is assumed.

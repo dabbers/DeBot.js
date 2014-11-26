@@ -2,37 +2,50 @@ var events = require('events');
 var util = require('util');
 var irc = require('irc');
 
-function Bot(nick, settings) {
+function Bot(nick, group, settings) {
 	events.EventEmitter.call(this);
 	irc.User.call(this);
 
 	var self = this;
 
 	var modules = {};
+	this.sockets = [];
 
-	this.LoadModule = function() {
-		var module1 = require('./module1');
-		var module2 = require('./module2');
-		modules.module1 = module1;
-		modules.module2 = module2;
-		//module1 = new module1();
-		module1.init(self);
-		//module2 = new module2();
-		module2.init(self);
+	this.loadModule = function(modname) {
+		try {
+			var module1 = require('../modules/' + modname);
+			modules[modname] = module1;
+			module1.init(self);
+		}
+		catch(ex) {
+			console.log("Failed to load module. ", ex);
+			return false;
+		}
+
+		return modules[modname];
 	}
 
-	this.UnloadModule = function() {
-		modules.module1.uninit();
+	this.unloadModule = function(modname) {
+		if (modules[modname]) {
+			modules[modname].uninit();
+			delete modules[modname];
+		}
 	}
 
+	this.__defineGetter__('group', function(){
+		group.passer = self;
+		return group;
 
-	this.SayHi = function()
-	{
-		console.log("This is bot saying Hello");
+	})
+
+	this.sendTick = function() {
+		for(var i in self.sockets) {
+			self.sockets[i].sendTick();
+		}
 	}
 }
-util.inherits(Bot,events.EventEmitter);
-util.inherits(Bot, irc.User);
+util.inherits(Bot, events.EventEmitter);
+util.inherits(Bot, 			  irc.User);
 
 Bot.prototype.base_emit = Bot.prototype.emit;
 Bot.prototype.emit = function emit(type) {
@@ -44,6 +57,7 @@ Bot.prototype.emit = function emit(type) {
   if (type == "error") {
   	return this.base_emit.apply(this, arguments);
   }
+
   handler = this._events[type];
 
   if (!handler)
@@ -81,7 +95,7 @@ Bot.prototype.emit = function emit(type) {
 
 function fakeBot(realBot)
 {
-	Bot.cal(this);
+	Bot.call(this);
 
 	this.RealBot = realBot; 
 	var self = this;
@@ -90,6 +104,7 @@ function fakeBot(realBot)
 	this.on = function(event, cb) {
 		self.callbacks.push({"event":event, "cb":cb});
 		self.RealBot.on(event, cb);
+		return self;
 	}
 
 	this.cleanupMethods = function() {

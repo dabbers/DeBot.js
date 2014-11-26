@@ -64,6 +64,33 @@ function NodeSocket(host, port, ssl) {
 
     }
 
+    var queue = new PriorityQueue({
+        comparator: function(a, b) { 
+            return a.timestamp-b.timestamp;
+        }});
+
+        var interval = 700; // 500 ms between each send
+
+    // Can accept a string or an array of strings to send.
+    // Please use an array of strings to take use of the prioity queue.
+    // You can also send in a {"timestamp":int, "message":string} object where 
+    // timestamp is an epoch timestamp in milliseconds (normal epoch * 1000 or new Date().getTime())
+    this.Write = function(message) {
+        var date = new Date().getTime();
+        if (typeof message == "string") {
+            queue.queue({"timestamp":date, "message":message});
+        }
+        else if (message.constructor === Array) {
+            for(var i = 0; i < message.length; i++) {
+                queue.queue({"timestamp":date + (interval * i), "message":message[i]});
+            }
+        }
+        else {
+            queue.queue({"timestamp":message.timestamp, "message":message.message});
+        }
+    }
+
+    
     this.__defineGetter__("Reader", function() {
         throw "You must implement Reader";
     });
@@ -71,6 +98,12 @@ function NodeSocket(host, port, ssl) {
     this.__defineGetter__("Writer", function() {
         return socket;
     });
+
+    this.SendTick = function() {
+        if (queue.length > 0 ) {
+            this.Writer.write(queue.dequeue().message + "\r\n");
+        }
+    }
 }
 util.inherits(NodeSocket, Base.ISocketWrapper);
 

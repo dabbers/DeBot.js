@@ -1,0 +1,26 @@
+DeBot.js uses various methods to check when a user logs offline.
+
+When a user logs in, the bot begins to follow the user's state through the IRC server. The bot needs to know if/when the user logs offline (changes nicks, disconnects). When a user is logged off, the bot logs out the user so that nobody else can pretend to be the logged in user and gain unauthorized access. Prior to IRC V3.0, there is no standard way to follow the state of the user, so DeBot currently uses 3 different methods based on IRC daemon availability. 
+
+The first approach is used on networks like freenode and should be the standard way to do this in IRC v3.0. This approach uses the MONITOR command. The Monitor command returns raw numeric 731 when a user appears offline. When this is done, DeBot.js will log out the user associated with this nickname.
+
+Usage Scenario:
+MONITOR + taget
+Offline => :<server> 731 <nick> :target[,target2]*
+MONITOR - NICK
+
+The next approach is used on irc daemons including Unreal IRCd. This apporach should be migrated by irc servers to use Monitor in the future, but not all servers have to follow irc v3.0 spec. WATCH works similiarly to MONITOR but uses raw numeric 601. WATCH also returns a bit more information on the user such as ident, host, and sign on time. Of course, these items are not needed for our purposes.
+
+Usage Scenario:
+WATCH
+WATCH +target
+Ofline => :<server> 601 <nick> target ident host signOn? :logged offline
+WATCH -target
+
+The final approach depends on the client to check in with the server. This will use ISON to get if the nick is online. ISON is not as friendly as Watch or Monitor in that you have 1 numeric returned for both online and offline responses. The text following the colon will deem if the user is logged in or not. The downside to this approach, is that we have to choose a timer interval to check for the user's online state. If you request ISON too frequently, you may get banned, shunned, or cause damage to the server's resource usage. If you don't requeset enough, a non-trusted user will have a larger window to attempt to change their nick to match yours.
+
+Usage Scenario:
+ISON target
+Offline => :<server> 303 <nicK> :
+
+There is of course one other method that can be used to track a user's online state, and that is by using an Auth Channel. This means you must share this channel with the bot at all times. This isn't nearly as user friendly but does prevent the need for constant ISON messages to and from the server. This scenario might even be preferrable if you are always going to be in at least one channel with your bot. This will be the default fallback option for DeBot.js. If you don't like this setting, change the channel to an integer to specify the interval time in seconds for the setting "AuthVerification".
