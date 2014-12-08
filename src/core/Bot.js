@@ -1,24 +1,43 @@
 var events = require('events');
 var util = require('util');
-var irc = require('irc');
+var irc = require('dabbit.base');
+var socket = require('./NodeSocket');
+var commandable = require('./Commandable');
 
 function Bot(nick, group, settings) {
 	events.EventEmitter.call(this);
 	irc.User.call(this);
 
+
+	this.on('OnPrivmsg', function(serv, msg) {
+		lastchan = (msg.To.Type == "Client" ? msg.From.Parts[0] : msg.To.Parts[0]);
+		lastnet = serv.alias;
+	});
+
+
+	commandable.call(this);
+
 	var self = this;
+	var al = nick;
 
 	var modules = {};
-	this.sockets = [];
+	this.sockets = {};
+
+	this.__defineGetter__('alias', function(){
+		return al;
+	});
 
 	this.loadModule = function(modname) {
 		try {
-			var module1 = require('../modules/' + modname);
+			var modpath = Core.relativeToAbsolute('modules/'+ modname);
+			if (require.cache[modpath]) delete require.cache[mod_file];
+
+			var module1 = require(modpath);
 			modules[modname] = module1;
 			module1.init(self);
 		}
 		catch(ex) {
-			console.log("Failed to load module. ", ex);
+			console.log("Failed to load module. ", ex, new Error().stack);
 			return false;
 		}
 
@@ -38,15 +57,130 @@ function Bot(nick, group, settings) {
 
 	})
 
-	this.sendTick = function() {
+	this.tick = function() {
 		for(var i in self.sockets) {
-			self.sockets[i].sendTick();
+			self.sockets[i].tick();
 		}
 	}
+
+	var usableSettings = (settings || group);
+
+	this.Nick = usableSettings.Nick;
+	this.Ident = usableSettings.Ident;
+	this.Name = Core.config.OwnerNicks + "'s bot";
+
+	//this.Channels = usableSettings.Channels;
+
+	this.on("OnConnectionEstablished", function(server, msg) {
+		for(var chan in usableSettings.Channels) {
+			self.sockets[server.alias].Write("JOIN " + usableSettings.Channels[chan]);
+		}
+	});
+
+	this.connect = function(name, connectInfo) {
+		if (!name) throw "Name is required (first param)";
+		if (!connectInfo || !connectInfo.host) throw "connectInfo object is required. Keys: host (required), port (6667 default), ssl (false default)";
+
+		self.sockets[name] = Core.context.CreateConnection(
+			"Direct", 
+			Core.context.CreateSocket(
+				connectInfo.host, 
+				connectInfo.port || 6667, 
+				connectInfo.ssl || false
+			)
+		);
+	}
+
+	this.settings = function() {
+		return settings;
+	}
+	var lastchan = "#dab";
+	var lastnet = "dab";
+
+	/*
+	 * Either .say(message)
+	 * Or     .say(channel, msg)
+	 * or     .say(network, channel, msg)
+	 */
+	this.say = function(net, chan, msg) {
+		if (!msg) {
+			if (!chan) {
+				msg = net;
+				chan = lastchan;
+				net = lastnet;
+			}
+			else {
+				msg = chan;
+				chan = net;
+				net = lastnet;
+			}
+		}
+console.tmp(net, chan, msg);
+		self.sockets[net].Write("PRIVMSG " + chan + " :" + msg);
+	}
+
+	this.me = function(net, chan, msg) {
+		// todo
+	}
+
+	/*
+	 * Either .join(channel)
+	 * Or 	  .join(channel, pass)
+	 * Or 	  .join(net, channel)
+	 * Or 	  .join(net, channel, pass)
+	 */
+	this.join = function(net, chan, pass) {
+		// Check if pass provided because that means the other 2 aren't what they
+		// are supposed to be if no pass is provided
+		if (!pass) {
+
+			// verify if net is actually a network
+			if (!self.sockets[net]) {
+				// net is a channel. Check if password provided
+				if (chan) {
+					pass = chan;
+				}
+				chan = net;
+				net = lastnet;
+			}
+		}
+
+		self.sockets[net].Write("JOIN " + chan + " " + pass);
+	}
+
+	/*
+	 * Either .part(channel)
+	 * Or 	  .part(channel, reason)
+	 * Or 	  .part(net, channel)
+	 * Or 	  .part(net, channel, reason)
+	 */
+	this.part = function(net, chan, reason) {
+		// Check if reason provided because that means the other 2 aren't what they
+		// are supposed to be if no reason is provided
+		if (!reason) {
+
+			// verify if net is actually a network
+			if (!self.sockets[net]) {
+				// net is a channel. Check if password provided
+				if (chan) {
+					reason = chan;
+				}
+				chan = net;
+				net = lastnet;
+			}
+		}
+		self.sockets[net].Write("PART " + chan + " :" + reason);
+	}
+
 }
 util.inherits(Bot, events.EventEmitter);
 util.inherits(Bot, 			  irc.User);
+util.inherits(Bot, 			  commandable);
 
+// NEVER call this function yourself. Use BotGroup's addNetwork function.
+
+
+// Overwrite .emit to allow cancelling 
 Bot.prototype.base_emit = Bot.prototype.emit;
 Bot.prototype.emit = function emit(type) {
   var er, handler, len, args, i, listeners;
@@ -70,7 +204,7 @@ Bot.prototype.emit = function emit(type) {
 	    this.domain.enter();
 
     len = arguments.length;
-    args = new Array(len);
+    args = new Array(len + 1);
     var e = {"handled":false};
 
     for (i = 1; i < len; i++)
@@ -93,33 +227,5 @@ Bot.prototype.emit = function emit(type) {
   return true;
 };
 
-function fakeBot(realBot)
-{
-	Bot.call(this);
 
-	this.RealBot = realBot; 
-	var self = this;
-	this.callbacks = [];
-
-	this.on = function(event, cb) {
-		self.callbacks.push({"event":event, "cb":cb});
-		self.RealBot.on(event, cb);
-		return self;
-	}
-
-	this.cleanupMethods = function() {
-		self.callbacks.forEach(function(cb) { self.RealBot.removeListener(cb.event, cb.cb); } );
-	}
-	this.__noSuchMethod__ = function(methName, args) {
-		try
-		{
-  			return self.RealBot[methName].call(self.RealBot, args);	
-		}
-		catch(ex)
-		{
-			console.log("Exception caught", ex);
-		}
-	};
-}
-fakeBot.prototype = Object.create(NoSuchMethodTrap);
-util.inherits(fakeBot, Bot);
+module.exports = Bot;

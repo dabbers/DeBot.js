@@ -1,6 +1,7 @@
-var Base = require("all")("dabbit/Base");
+var Base = require('dabbit.base');
 var net = require('net');
 var util = require('util');
+var PriorityQueue = require('js-priority-queue');
 
 function NodeSocket(host, port, ssl) {
     // Indicates object inheritance.
@@ -29,7 +30,6 @@ function NodeSocket(host, port, ssl) {
 
     var self = this;
     this.ConnectAsync = function(rawData) { 
-
         rdCb = rawData || function() { };  
         socket = net.createConnection( port, host, function() { connectedState = true; console.log("connected"); });
         socket.setEncoding('utf8');
@@ -75,7 +75,7 @@ function NodeSocket(host, port, ssl) {
     // Please use an array of strings to take use of the prioity queue.
     // You can also send in a {"timestamp":int, "message":string} object where 
     // timestamp is an epoch timestamp in milliseconds (normal epoch * 1000 or new Date().getTime())
-    this.Write = function(message) {
+    this.write = function(message) {
         var date = new Date().getTime();
         if (typeof message == "string") {
             queue.queue({"timestamp":date, "message":message});
@@ -99,7 +99,7 @@ function NodeSocket(host, port, ssl) {
         return socket;
     });
 
-    this.SendTick = function() {
+    this.tick = function() {
         if (queue.length > 0 ) {
             this.Writer.write(queue.dequeue().message + "\r\n");
         }

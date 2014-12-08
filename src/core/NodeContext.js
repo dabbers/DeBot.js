@@ -1,6 +1,15 @@
-//var Base = require("all")("dabbit/Base");
+var Base = require('dabbit.base');
 var NodeSocket = require('./NodeSocket');
 var util = require('util');
+
+function DeBotConnection(inCtx, socket) {
+    Base.Connection.call(this, inCtx, socket);
+
+    this.tick = function() {
+        socket.tick();
+    }
+}
+util.inherits(DeBotConnection, Base.Connection);
 
 function NodeContext() {
     // Indicates object inheritance.
@@ -10,8 +19,8 @@ function NodeContext() {
     /// Create a connection object given ConnectionType and ISocketWrapper
     /// </summary>
     this.CreateConnection = function(connectionType, socket) {
-        var connection = new Base.Connection(this, socket);
-                
+        var connection = new DeBotConnection(this, socket);
+
         return connection;
     }
 
