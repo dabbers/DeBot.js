@@ -2,16 +2,20 @@ var events = require('events');
 var util = require('util');
 var Bot = require('./Bot');
 var Network = require('./Network');
+var Commandable = require('./Commandable');
 
 function BotGroup(name, settings) {
 	events.EventEmitter.call(this);
+	Commandable.call(this);
 
+	settings = settings || Core.defaultGroupSetting;
 	var self = this;
 	this.bots = {};
 
 	this.passer = undefined;
 	this.networks = {};
 	this.settings = settings;
+
 
 	this.tick = function() {
 		for(var i in self.bots) {
@@ -51,6 +55,8 @@ function BotGroup(name, settings) {
 
 	// Condiition of a group not being added to the groups before we were adding bots to it
 	this.init = function() {
+		var command_prefix = settings.CommandPrefix;
+
 		for(var botKey in settings.Bots) {
 			
 			self.addBot(botKey, settings.Bots[botKey]);
@@ -59,37 +65,52 @@ function BotGroup(name, settings) {
 				for(var chan in self.settings.Channels) {
 					self.bots[bot].sockets[server.alias].Write("JOIN " + settings.Channels[chan]);
 				}
-
 			});
 
-			self.bots[botKey].on("command_!!", function(bot) {
-				
+			self.bots[botKey].addCommand(settings.RawCommandPrefix || (command_prefix + command_prefix), {"level":3}, function(bot) {
 				bot = self.bots[bot];
-				return function(server, msg) {
-					var firstbot = Object.keys(self.bots)[0];
+				var group = bot.group;
 
-					if (self.networks[server.alias].isChannel(msg.Parts[2])) {
+				return function(server, channel, msg) {
+					var indx = 0;
 
-						if (bot.alias == firstbot || !self.networks[server.alias].nickIsInChannel(self.bots[firstbot].Nick, msg.Parts[2])) {
-							console.tmp = console.log;
-							var lines = [];
-							console.log = function(line) {
-								lines.push("PRIVMSG " + msg.Parts[2] + " :" + Object.values(arguments).join(" "));
-							}
+					if (channel.isChannel) {
+						//channel = server.Channels[msg.Parts[2]];
 
-								eval(msg.Parts.splice(4).join(" "));
+						var firstbot = Object.keys(self.bots)[0];
+						while(!self.networks[server.alias].nickIsInChannel(self.bots[firstbot].Nick, msg.Parts[2]) && indx + 1 < Object.keys(self.bots).length) firstbot = Object.keys(self.bots)[++indx];
 
-
-							
-							console.log = console.tmp;
-							bot.sockets[server.alias].Write(lines);
-
+						if (bot.alias != firstbot) {
 							return;
 						}
 					}
+
+					var lines = [];
+					console.log = Core.createLogWrapper(lines,  channel.Display);
+					global.echo = console.log;
+
+					eval(msg.Parts.splice(4).join(" "));
+
+					console.log = console.tmp;
+					delete global.echo;
+					bot.sockets[server.alias].Write(lines);
 				}
-			}(botKey)
-			);
+			}(botKey));
+
+
+			self.bots[botKey].addCommand("login", {"allowpm":true},(function(bot) {
+				bot = self.bots[bot];
+				var group = bot.group;
+
+				return function(server, channel, msg) { 
+					if (self.attemptLogin(server, name, channel, msg)) {
+						bot.say("Success! Logged in");
+					}
+					else {
+						bot.say("Error! Invalid host/password/botgroup");
+					}
+				}
+			})(botKey) );
 		}
 		for(var network in settings.Networks) {
 			self.addNetwork(settings.Networks[network]);
@@ -112,7 +133,9 @@ function BotGroup(name, settings) {
 	})
 
 }
-util.inherits(Bot,events.EventEmitter);
+util.inherits(Bot, events.EventEmitter);
+util.inherits(BotGroup, events.EventEmitter);
+util.inherits(BotGroup, Commandable);
 
 BotGroup.prototype.addBot = function(botOrName, options) {
 		// createBot will call this function again once the bot is created.

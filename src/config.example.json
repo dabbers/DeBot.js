@@ -53,7 +53,10 @@
 				"#channel2 channel2pass"
 			],
 			// Modules every bot must load.
-			"Modules": ["Commands"]
+			"Modules": ["Commands"],
+			// The prefix to the botgroup commandsd.
+			"CommandPrefix":"!",
+			"RawCommandPrefix":"!!"
 		},
 		// A second bot group
 		"cibby": {

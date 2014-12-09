@@ -8,7 +8,6 @@ function Bot(nick, group, settings) {
 	events.EventEmitter.call(this);
 	irc.User.call(this);
 
-
 	this.on('OnPrivmsg', function(serv, msg) {
 		lastchan = (msg.To.Type == "Client" ? msg.From.Parts[0] : msg.To.Parts[0]);
 		lastnet = serv.alias;
@@ -28,18 +27,18 @@ function Bot(nick, group, settings) {
 	});
 
 	this.loadModule = function(modname) {
-		try {
+		//try {
 			var modpath = Core.relativeToAbsolute('modules/'+ modname);
 			if (require.cache[modpath]) delete require.cache[mod_file];
 
 			var module1 = require(modpath);
 			modules[modname] = module1;
 			module1.init(self);
-		}
+		/*}
 		catch(ex) {
 			console.log("Failed to load module. ", ex, new Error().stack);
 			return false;
-		}
+		}*/
 
 		return modules[modname];
 	}
@@ -69,8 +68,6 @@ function Bot(nick, group, settings) {
 	this.Ident = usableSettings.Ident;
 	this.Name = Core.config.OwnerNicks + "'s bot";
 
-	//this.Channels = usableSettings.Channels;
-
 	this.on("OnConnectionEstablished", function(server, msg) {
 		for(var chan in usableSettings.Channels) {
 			self.sockets[server.alias].Write("JOIN " + usableSettings.Channels[chan]);
@@ -89,6 +86,12 @@ function Bot(nick, group, settings) {
 				connectInfo.ssl || false
 			)
 		);
+	}
+
+	this.disconnect = function(name, quitmsg) {
+		if (!name) throw "Name is required (first param)";
+
+		self.sockets[name].Socket().Writer.write("QUIT :" + (quitmsg || "") + "\r\n");
 	}
 
 	this.settings = function() {
@@ -115,7 +118,6 @@ function Bot(nick, group, settings) {
 				net = lastnet;
 			}
 		}
-console.tmp(net, chan, msg);
 		self.sockets[net].Write("PRIVMSG " + chan + " :" + msg);
 	}
 

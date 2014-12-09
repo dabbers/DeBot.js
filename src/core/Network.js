@@ -153,6 +153,55 @@ function Network(group, ctx, name) {
         return self.Attributes["CHANTYPES"].indexOf(source[0].toString()) != -1;
     }
 
+    /* 
+     * If just a user is passed, symbol is @. 
+     * Otherwise compares to the symbol passed.
+     */
+    this.isOp = function (user, channel, symbol) {
+        if (!symbol) symbol = "@";
+
+        var list = server.Attributes["PREFIX_PREFIXES"];
+        var idx = list.indexOf(symbol); // ~&@%+
+
+        if (idx == -1) {
+            list = server.Attributes["PREFIX_MODES"];
+            idx = list.indexOf(symbol) // qaohv
+        }
+
+        if (!self.nickIsInChannel(user, channel)) {
+            return false;
+        }
+
+        var usridx = list.indexOf(self.Channels[channel].Users[user].Modes[0]);
+        return useridx == idx;
+    }
+
+    /*
+     * Works same as isOp except includes modes higher than symbol.
+     */
+    this.isOpOrHigher = function(user, channel, symbol) {
+        if (!symbol) symbol = "@";
+
+        var list = server.Attributes["PREFIX_PREFIXES"];
+        var idx = list.indexOf(symbol); // ~&@%+
+
+        if (idx == -1) {
+            list = server.Attributes["PREFIX_MODES"];
+            idx = list.indexOf(symbol) // qaohv
+        }
+
+        if (!self.nickIsInChannel(user, channel)) {
+            return false;
+        }
+
+        var usridx = list.indexOf(self.Channels[channel].Users[user].Modes[0]);
+        return useridx == idx;
+    }
+
+    this.compareToMode = function(user, channel, symbol) {
+
+    }
+
 }
 
 module.exports = Network;

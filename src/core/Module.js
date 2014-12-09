@@ -1,41 +1,31 @@
 var Bot = require('./Bot');
+var BotGroup = require('./Bot');
 var util = require('util');
-var Reflect = require('harmony-reflect');
+
+var fakeBot = require('./FakeBot');
+
+var fakeGroup = require('./FakeGroup');
 
 function Module(callback) { 
 
+	var self = this;
 	return function() {
-		var fakebot = undefined;
-		var self = this;
 		this.init = function(realBot) {
-			self.fakebot = new fakeBot(realBot, realBot.settings);
-			self.fakebot = Proxy(self.fakebot, {
-				// FIXME: don't know why I need to provide this method,
-				// JS complains if getPropertyDescriptor is left out, or returns undefined
-				// Apparently, this method is called twice: once for '_noSuchMethod_' and once for 'foo'
-				get: function(rcvr, name) {
 
-					if (name === '__noSuchMethod__') {
-						return function(nm, args) {
-							if (!nm || ! realBot[nm]) {
-								return;
+			var fakegroup = new fakeGroupOverrides(realBot.group);
+			var fakebot = new fakeBotOverrides(realBot, fakegroup);
 
-							}
-							return realBot[nm].apply(realBot, args);
-						};
-					} else {
-						return function() {
-							var args = Array.prototype.slice.call(arguments);
-							return this.__noSuchMethod__(name, args);
-						}
-					}
+			self.uninit = function() {
+				fakebot.cleanupMethods();
+				
+				for(var i in fakegroup.bots) {
+					fakegroup.bots[i].cleanupMethods();
 				}
-			});
-			callback(self.fakebot);
-		}
 
-		this.uninit = function() {
-			self.fakebot.cleanupMethods();
+				fakegroup.cleanupMethods();
+			}
+
+			callback(fakebot, fakegroup);
 		}
 	};
 
@@ -43,20 +33,29 @@ function Module(callback) {
 
 exports.module = Module;
 
-function fakeBot(realBot)
-{
-	this.RealBot = realBot; 
-	var self = this;
-	this.callbacks = [];
 
-	this.on = function(event, cb) {
-		self.callbacks.push({"event":event, "cb":cb});
-		self.RealBot.on(event, cb);
-		return self;
-	}
+function fakeBotOverrides(realBot, fakegroup) {
+	fakeBot.call(this, realBot);
 
-	this.cleanupMethods = function() {
-		self.callbacks.forEach(function(cb) { self.RealBot.removeListener(cb.event, cb.cb); } );
-	}
+	this.__defineGetter__('group', function(){
+		fakegroup.passer = realBot;
+		return fakegroup;
+	});
 }
-util.inherits(fakeBot, Bot);
+util.inherits(fakeBotOverrides, fakeBot);
+
+function fakeGroupOverrides(realgroup) {
+	fakeGroup.call(this, realgroup);
+
+	var newbots = {};
+	var self = this;
+
+	this.__defineGetter__('bots', function(){
+		for(var i in realgroup.bots) {
+			newbots[i] = new fakeBotOverrides(realgroup.bots[i], self);
+		}
+
+		return newbots;
+	});
+}
+util.inherits(fakeGroupOverrides, fakeGroup);

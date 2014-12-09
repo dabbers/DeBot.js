@@ -6,7 +6,7 @@ var PriorityQueue = require('js-priority-queue');
 function NodeSocket(host, port, ssl) {
     // Indicates object inheritance.
     Base.ISocketWrapper.call(this);
-    
+
     var socket = undefined;
     var backlog = String.Empty;
     var rdCb = undefined;
@@ -98,6 +98,10 @@ function NodeSocket(host, port, ssl) {
     this.__defineGetter__("Writer", function() {
         return socket;
     });
+
+    this.Writer = function() {
+        return socket;
+    }
 
     this.tick = function() {
         if (queue.length > 0 ) {

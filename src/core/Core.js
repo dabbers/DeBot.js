@@ -4,6 +4,8 @@ var Config = require('./Config');
 var path = require('path');
 var contx = require('./NodeContext');
 
+console.tmp = console.log;
+
 function Core() {
 
 }
@@ -13,7 +15,7 @@ Core.prototype.groups = {};
 Core.prototype.settings = {};
 Core.prototype.config = undefined; 
 
-Core.prototype.defaultGroupSetting = {"Networks":[], "Bots":{}, "Channels":[], "Modules":[]};
+Core.prototype.defaultGroupSetting = {"Networks":[], "Bots":{}, "Channels":[], "Modules":[], "CommandPrefix":"!"};
 Core.prototype.defaultBotSetting = {"Ident":"dbt", "Networks":[], "Bots":{}, "Channels":[], "Modules":[]};
 
 Core.prototype.addGroup = function(groupName, settings) {
@@ -111,7 +113,29 @@ Core.prototype.tick = function() {
 	}
 }
 
+Core.prototype.createLogWrapper = function(lineRef, channel) {
+	return function(lines, chann) {
+		return function () {
+			var ar = Object.values(arguments);
+			for(var i = 0; i < ar.length; i++) {
+				var stringified = (ar[i] || "undefined").toString().replace(/\r/g, "");
+
+				if (stringified.indexOf("\n") != -1) {
+					stringified.split("\n").map(function(k) { return lines.push("PRIVMSG " + chann + " :" + k); });
+
+				}
+				else {
+					lines.push("PRIVMSG " + chann + " :" + ar[i]);
+				}
+			}
+			
+		}
+	}(lineRef, channel);
+}
+
 // The compliment to Object.keys
 Object.values = function(obj) { return Object.keys(obj).map(function (key) { return obj[key];});}
+
+//var process = require('process');
 
 module.exports = new Core();
