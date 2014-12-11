@@ -16,23 +16,13 @@ function Commandable() {
 	this.commands = {};
 	this.loggedin = {};
 
-	if (this.on) {
-		this.on("OnPrivmsg", function(server, msg) {
-			var cmd = msg.Parts[3].substring(1);
 
-			if (self.commands[cmd] && functionCanExecute(server, self.commands[cmd], msg)) {
-				self.commands[cmd].callback(server, server.isChannel(msg.To.Parts[0]) ? server.Channels[msg.To.Parts[0]] : {"isChannel":false, "Display":msg.From.Parts[0], "Parts":["", "", msg.To.Parts[0]]}, msg);
-			}
-
-		});
-	}
-
-
-	function functionCanExecute(server, command, message) {
-
-		return true;
+	// Can't always tell who sent this function call. In BotGroup multiple bots could execute this call.
+	this.functionCanExecute = function(server, command, message) {
 		var timerOverridden = false;
-
+		
+console.log(1);
+		
 		// Check for channel exceptions
 		for(var i = 0; i < command.exceptions.channels.length; i++) {
 			if (i == message.To.Parts[0]) {
@@ -45,7 +35,7 @@ function Commandable() {
 				break;
 			}
 		}
-
+console.log(2);
 		// Check for channel exceptions
 		for(var i = 0; i < command.exceptions.users.length; i++) {
 			if (i.test(message.Parts[0])) {
@@ -58,20 +48,37 @@ function Commandable() {
 				break;
 			}
 		}
-
-		if (!timerOverridden && new Date().getTime() - command.time < command.options.timer) {
+console.log(3);		
+		if (command.options.timer != 0 && !timerOverridden && new Date().getTime() - command.time <= command.options.timer) {
 			return false;
 		}
-
-		if (command.options.level > self.loggedin[server.alias][message.From.Parts[0]].level) {
+console.log(4);
+		var level = 1;
+		if (self.loggedin[server.alias] && self.loggedin[server.alias][message.From.Parts[0]]) {
+			level = self.loggedin[server.alias][message.From.Parts[0]].level;
+		}
+console.log(5);
+		if (command.options.level > level) {
 			return false;
 		}
-
+console.log(6);
 
 
 		command.time = new Date().getTime();
+		return true;
 	}
 
+
+	if (this.on) {
+		this.on("OnPrivmsg", function(server, msg) {
+			var cmd = msg.Parts[3].substring(1);
+
+			if (self.commands[cmd] && this.functionCanExecute(server, self.commands[cmd], msg)) {
+				self.commands[cmd].callback(server, server.isChannel(msg.To.Parts[0]) ? server.Channels[msg.To.Parts[0]] : {"isChannel":false, "Display":msg.From.Parts[0], "Parts":["", "", msg.To.Parts[0]]}, msg);
+			}
+
+		});
+	}
 
 	this.addCommand = function(string, options, fn) {
 
@@ -143,7 +150,6 @@ function Commandable() {
 		if (!self.networks[server.alias].isChannel(msg.Parts[2])) {
 			var auths = Core.config.Auth;
 
-
 			for(var i = 0; i < auths.length; i++) {
 				if (auths[i].BotGroup) {
 					if (auths[i].BotGroup.indexOf(groupname) == -1) {
@@ -162,11 +168,13 @@ function Commandable() {
 						if (!self.loggedin[server.alias]) self.loggedin[server.alias] = {}
 
 						self.loggedin[server.alias][msg.From.Parts[0]] = {"nick":msg.From.Parts[0], "level":auths[i].level};
+					console.log(self.loggedin);
 						return true;
 					}
 				}
 			}
 		}
+		return false;
 	}
 }
 

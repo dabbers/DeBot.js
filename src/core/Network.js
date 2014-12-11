@@ -160,11 +160,11 @@ function Network(group, ctx, name) {
     this.isOp = function (user, channel, symbol) {
         if (!symbol) symbol = "@";
 
-        var list = server.Attributes["PREFIX_PREFIXES"];
+        var list = self.Attributes["PREFIX_PREFIXES"];
         var idx = list.indexOf(symbol); // ~&@%+
 
         if (idx == -1) {
-            list = server.Attributes["PREFIX_MODES"];
+            list = self.Attributes["PREFIX_MODES"];
             idx = list.indexOf(symbol) // qaohv
         }
 
@@ -173,7 +173,7 @@ function Network(group, ctx, name) {
         }
 
         var usridx = list.indexOf(self.Channels[channel].Users[user].Modes[0]);
-        return useridx == idx;
+        return usridx == idx;
     }
 
     /*
@@ -182,11 +182,11 @@ function Network(group, ctx, name) {
     this.isOpOrHigher = function(user, channel, symbol) {
         if (!symbol) symbol = "@";
 
-        var list = server.Attributes["PREFIX_PREFIXES"];
+        var list = self.Attributes["PREFIX_PREFIXES"];
         var idx = list.indexOf(symbol); // ~&@%+
 
         if (idx == -1) {
-            list = server.Attributes["PREFIX_MODES"];
+            list = self.Attributes["PREFIX_MODES"];
             idx = list.indexOf(symbol) // qaohv
         }
 
@@ -195,11 +195,11 @@ function Network(group, ctx, name) {
         }
 
         var usridx = list.indexOf(self.Channels[channel].Users[user].Modes[0]);
-        return useridx == idx;
+        return usridx != -1 && usridx <= idx;
     }
 
     this.compareToMode = function(user, channel, symbol) {
-
+        
     }
 
 }

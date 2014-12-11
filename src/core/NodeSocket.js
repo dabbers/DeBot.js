@@ -69,7 +69,7 @@ function NodeSocket(host, port, ssl) {
             return a.timestamp-b.timestamp;
         }});
 
-        var interval = 700; // 500 ms between each send
+    var interval = 700; // time to space each method apart by for priority queue ordering.
 
     // Can accept a string or an array of strings to send.
     // Please use an array of strings to take use of the prioity queue.
@@ -81,9 +81,15 @@ function NodeSocket(host, port, ssl) {
             queue.queue({"timestamp":date, "message":message});
         }
         else if (message.constructor === Array) {
-            for(var i = 0; i < message.length; i++) {
-                queue.queue({"timestamp":date + (interval * i), "message":message[i]});
+            if (message.length == 1 && queue.length == 0) {
+                this.Writer.write(message + "\r\n");
             }
+            else {
+                for(var i = 0; i < message.length; i++) {
+                    queue.queue({"timestamp":date + (interval * i), "message":message[i]});
+                }
+            }
+    
         }
         else {
             queue.queue({"timestamp":message.timestamp, "message":message.message});
@@ -107,6 +113,10 @@ function NodeSocket(host, port, ssl) {
         if (queue.length > 0 ) {
             this.Writer.write(queue.dequeue().message + "\r\n");
         }
+    }
+
+    this.clearQueue = function() {
+        while(queue.length > 0) queue.dequeue();
     }
 }
 util.inherits(NodeSocket, Base.ISocketWrapper);

@@ -8,6 +8,11 @@ function Bot(nick, group, settings) {
 	events.EventEmitter.call(this);
 	irc.User.call(this);
 
+	var lastchan = "#dab";
+	var lastnet = "dab";
+
+	// We want to set our last net/chan stuff before the commandable interface
+	// tries making calls out. So we register our onPrivmsg first.
 	this.on('OnPrivmsg', function(serv, msg) {
 		lastchan = (msg.To.Type == "Client" ? msg.From.Parts[0] : msg.To.Parts[0]);
 		lastnet = serv.alias;
@@ -97,8 +102,6 @@ function Bot(nick, group, settings) {
 	this.settings = function() {
 		return settings;
 	}
-	var lastchan = "#dab";
-	var lastnet = "dab";
 
 	/*
 	 * Either .say(message)

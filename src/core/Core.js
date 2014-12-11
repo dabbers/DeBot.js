@@ -9,6 +9,7 @@ console.tmp = console.log;
 function Core() {
 
 }
+Core.prototype.loaded = false;
 Core.prototype.context = new contx();
 Core.prototype.bots = [];
 Core.prototype.groups = {};
@@ -69,6 +70,8 @@ Core.prototype.createBot = function(botName, groupName, settings) {
 	var bot = new Bot(botName, group, settings);
 	this.bots[botName] = bot;
 	group.addBot(bot);
+
+	return bot;
 }
 	
 Core.prototype.destroyBot = function(botOrBotName) {
@@ -89,6 +92,8 @@ Core.prototype.init = function(configPath) {
 	for(var botgroup in botgroups) {
 		this.addGroup(botgroup, botgroups[botgroup]);
 	}
+
+	this.loaded = true;
 }
 
 // Expects an array of strings in host:+port format (+ and :port optional)
@@ -97,6 +102,7 @@ Core.prototype.setNetwork = function(name, connectionStrings) {
 }
 
 Core.prototype.randomServer = function(name) {
+	console.tmp("NAME: ", name);
 	var ran = this.config.Networks[name][Math.floor((Math.random() * this.config.Networks[name].length))];
 	var parts = ran.split(':');
 	

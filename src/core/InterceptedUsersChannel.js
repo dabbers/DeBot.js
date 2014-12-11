@@ -1,6 +1,6 @@
-
+var util = require('util');
 var Watchable = require( "overload" ).Watchable;
-
+var dabbit = require('dabbit.base');
 
 function DictionaryArray(propertyKey) {
 
@@ -53,7 +53,6 @@ function DictionaryArray(propertyKey) {
                 return dict[property];
             }
             else {
-
                 return lists[property];
             }
                 
@@ -64,7 +63,6 @@ function DictionaryArray(propertyKey) {
 
             if (isNaN(property)) {
                 if (!dict[property]) {
-
                     lists.push(value);
                 }
                 dict[property] = value;
@@ -74,30 +72,24 @@ function DictionaryArray(propertyKey) {
         },
         function query() {
             return Object.keys(list);
+        },
+        function numer(ArgInfo) {
+            if (dict[ArgInfo.property]) return true;
+
+            return false;
+        },
+        function del(ArgInfo) {
+            
         }
     );
 
     return obj;
 }
 
+function InterceptedUsersChannel(svr) {
+    dabbit.Channel.call(this, svr);
 
-
-var users = DictionaryArray("Nick");
-
-users.push({"Nick":"dab", "level":1});
-users.push({"Nick":"dab1", "level":7});
-users.push({"Nick":"dab2", "level":4});
-users.push({"Nick":"dab3", "level":2});
-
-users.sort(function(a,b) { return a.level - b.level; } );
-
-for( var i = 0; i < users.length; i++) {
-	console.log(users[i]);
+    this.Users = DictionaryArray("Nick");
 }
 
-users.splice(1,1);
-console.log();
-
-for( var i = 0; i < users.length; i++) {
-	console.log(users[i]);
-}
+module.exports = InterceptedUsersChannel;

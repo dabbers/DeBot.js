@@ -1,6 +1,7 @@
 var Base = require('dabbit.base');
 var NodeSocket = require('./NodeSocket');
 var util = require('util');
+var InterceptedUsersChannel = require('./InterceptedUsersChannel');
 
 function DeBotConnection(inCtx, socket) {
     Base.Connection.call(this, inCtx, socket);
@@ -49,7 +50,7 @@ function NodeContext() {
     /// <param name="svr">The Server object for applying this to. Used for passing into the Channel base class</param>
     /// <returns>An object that either is, or inherits from Channel</returns>
     this.CreateChannel = function(svr) {
-        return new Base.Channel(svr);
+        return new InterceptedUsersChannel(svr);
     }
 
     /// <summary>
