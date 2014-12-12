@@ -21,8 +21,7 @@ function Commandable() {
 	this.functionCanExecute = function(server, command, message) {
 		var timerOverridden = false;
 		
-console.log(1);
-		
+console.tmp("fce", 1);
 		// Check for channel exceptions
 		for(var i = 0; i < command.exceptions.channels.length; i++) {
 			if (i == message.To.Parts[0]) {
@@ -35,7 +34,7 @@ console.log(1);
 				break;
 			}
 		}
-console.log(2);
+console.tmp("fce", 2);
 		// Check for channel exceptions
 		for(var i = 0; i < command.exceptions.users.length; i++) {
 			if (i.test(message.Parts[0])) {
@@ -48,20 +47,24 @@ console.log(2);
 				break;
 			}
 		}
-console.log(3);		
+console.tmp("fce", 3);		
 		if (command.options.timer != 0 && !timerOverridden && new Date().getTime() - command.time <= command.options.timer) {
+console.tmp("fce", message.Parts[3], 1);
+console.tmp("fce", message.Parts[4]);
+console.tmp("fce", message.From.Parts[0]);
+console.tmp("fce", command.options);
 			return false;
 		}
-console.log(4);
+console.tmp("fce", 4);
 		var level = 1;
 		if (self.loggedin[server.alias] && self.loggedin[server.alias][message.From.Parts[0]]) {
 			level = self.loggedin[server.alias][message.From.Parts[0]].level;
 		}
-console.log(5);
+console.tmp("fce", 5);
 		if (command.options.level > level) {
 			return false;
 		}
-console.log(6);
+console.tmp("fce", 6);
 
 
 		command.time = new Date().getTime();
@@ -92,8 +95,11 @@ console.log(6);
 		}
 
 		for(var key in defaultOptions) {
-			if (!options[key]) options[key] = defaultOptions[key];
+			console.log(key, options[key]);
+			if (undefined === options[key]) options[key] = defaultOptions[key];
+			console.log(key, options[key]);
 		}
+
 		self.commands[string] = { 
 			"command":string,
 			"options":options,

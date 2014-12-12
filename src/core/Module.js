@@ -8,12 +8,13 @@ var fakeGroup = require('./FakeGroup');
 
 function Module(callback) { 
 
-	var self = this;
 	return function() {
+		var self = this;
 		this.init = function(realBot) {
 
 			var fakegroup = new fakeGroupOverrides(realBot.group);
-			var fakebot = new fakeBotOverrides(realBot, fakegroup);
+console.tmp("Module::fakeBot", fakeBot);
+			var fakebot = fakeBot(realBot, fakegroup);
 
 			self.uninit = function() {
 				fakebot.cleanupMethods();
@@ -32,7 +33,7 @@ function Module(callback) {
 };
 
 exports.module = Module;
-
+/*
 
 function fakeBotOverrides(realBot, fakegroup) {
 	fakeBot.call(this, realBot);
@@ -43,7 +44,7 @@ function fakeBotOverrides(realBot, fakegroup) {
 	});
 }
 util.inherits(fakeBotOverrides, fakeBot);
-
+*/
 function fakeGroupOverrides(realgroup) {
 	fakeGroup.call(this, realgroup);
 
@@ -52,7 +53,9 @@ function fakeGroupOverrides(realgroup) {
 
 	this.__defineGetter__('bots', function(){
 		for(var i in realgroup.bots) {
-			newbots[i] = new fakeBotOverrides(realgroup.bots[i], self);
+			// prevent overwriting old bots that might have had 
+			if (!newbots[i])
+				newbots[i] = fakeBot(realgroup.bots[i], self);
 		}
 
 		return newbots;

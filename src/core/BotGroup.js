@@ -136,8 +136,9 @@ function BotGroup(name, settings) {
 			!self.networks[serverAlias].nickIsInChannel(self.bots[firstbot].Nick, channel) 
 			&& indx + 1 < Object.keys(self.bots).length
 		) {
-
+			console.log("isExecutor", botNick, firstbot);
 			firstbot = Object.keys(self.bots)[++indx];
+			console.log("isExecutor", botNick, firstbot);
 		}
 
 		return botNick == firstbot;
@@ -175,9 +176,9 @@ function BotGroup(name, settings) {
 	self.addCommand(command_prefix + "clearbuffer", {"level":3, "timer":0}, function(server, channel, msg) {
 		bot = self.passer;
 		var group = self; // alias/shortcut
-console.log("CLEAR BUFFEWR");
+
 		for(var i in bot.sockets) {
-			bot.sockets[i].Socket.clearQueue();
+			bot.sockets[i].Socket().clearQueue();
 		}
 	});
 
@@ -193,11 +194,57 @@ console.log("CLEAR BUFFEWR");
 		}
 	});
 
-	/*var base_functionCanExecute = this.functionCanExecute;
-	this.functionCanExecute = function(sender, server, command, message) {
+	// Command management:
 
-		return base_functionCanExecute(sender, server, command, message);
-	}*/
+	self.addCommand(command_prefix + "addcmd", {"level":3, "timer":0}, function(server, channel, msg) {
+		bot = self.passer;
+		var group = self; // alias/shortcut
+
+		if (channel.isChannel && !botIsExecutor(server.alias, bot.Nick, channel.Display)) {
+			//channel = server.Channels[msg.Parts[2]];
+			return;
+		}
+
+
+
+	});
+	self.addCommand(command_prefix + "setcmd", {"level":3, "timer":0}, function(server, channel, msg) {
+		bot = self.passer;
+		var group = self; // alias/shortcut
+
+		if (channel.isChannel && !botIsExecutor(server.alias, bot.Nick, channel.Display)) {
+			//channel = server.Channels[msg.Parts[2]];
+			return;
+		}
+
+		
+
+	});
+	self.addCommand(command_prefix + "delcmd", {"level":3, "timer":0}, function(server, channel, msg) {
+		bot = self.passer;
+		var group = self; // alias/shortcut
+
+		if (channel.isChannel && !botIsExecutor(server.alias, bot.Nick, channel.Display)) {
+			//channel = server.Channels[msg.Parts[2]];
+			return;
+		}
+
+		
+
+	});
+	self.addCommand(command_prefix + "getcmd", {"level":3, "timer":0}, function(server, channel, msg) {
+		bot = self.passer;
+		var group = self; // alias/shortcut
+
+		if (channel.isChannel && !botIsExecutor(server.alias, bot.Nick, channel.Display)) {
+			//channel = server.Channels[msg.Parts[2]];
+			return;
+		}
+
+		
+
+	});
+
 }
 util.inherits(BotGroup, Commandable);
 util.inherits(BotGroup, EventEmitter);

@@ -1,88 +1,56 @@
 /*** THIS FILE HAS BEEN AUTO-GENERATED. ANY MODIFICATIONS TO THIS FILE MAY BE LOST ***/
 var util = require('util');
+var fakeEventsEmitter = require('./FakeEventsEmitter');
+var reflect = require('harmony-reflect');
 
 function fakeGroup(realGroup) {
 	this.realGroup = realGroup;
-	this.__defineGetter__('domain', function(){
-		return realGroup.domain;
-	});
-	this.__defineSetter__('domain', function(val){
-		return realGroup.domain = val;
-	});
-	this.__defineGetter__('_events', function(){
-		return realGroup._events;
-	});
-	this.__defineSetter__('_events', function(val){
-		return realGroup._events = val;
-	});
-	this.__defineGetter__('_maxListeners', function(){
-		return realGroup._maxListeners;
-	});
-	this.__defineSetter__('_maxListeners', function(val){
-		return realGroup._maxListeners = val;
-	});
-	this.__defineGetter__('bots', function(){
-		return realGroup.bots;
-	});
-	this.__defineSetter__('bots', function(val){
-		return realGroup.bots = val;
-	});
-	this.__defineGetter__('passer', function(){
-		return realGroup.passer;
-	});
-	this.__defineSetter__('passer', function(val){
-		return realGroup.passer = val;
-	});
-	this.__defineGetter__('networks', function(){
-		return realGroup.networks;
-	});
-	this.__defineSetter__('networks', function(val){
-		return realGroup.networks = val;
-	});
-	this.__defineGetter__('settings', function(){
-		return realGroup.settings;
-	});
-	this.__defineSetter__('settings', function(val){
-		return realGroup.settings = val;
-	});
-	this.__defineGetter__('events', function(){
-		return realGroup.events;
-	});
-	this.__defineSetter__('events', function(val){
-		return realGroup.events = val;
-	});
-	this.__defineGetter__('Events', function(){
-		return realGroup.Events;
-	});
-	this.__defineSetter__('Events', function(val){
-		return realGroup.Events = val;
-	});
-	this.__defineGetter__('name', function(){
-		return realGroup.name;
-	});
-	this.__defineSetter__('name', function(val){
-		return realGroup.name = val;
-	});
 	fakeEventsEmitter.call(this);
 }
 util.inherits(fakeGroup, fakeEventsEmitter);
-module.exports = fakeGroup;
 
-fakeGroup.prototype.tick = function() {
-	return this.realGroup.tick();
+function createFakeGroup(realGroup) {
+	var tmpgroup = new fakeGroup(realGroup);
+	var commandsToRemove = [];
+	var newbots = {};
+	var self = this;
+
+	return Proxy(tmpbot, {
+		get:function(proxy, name) {
+			if ("addCommand" == name) {
+				return function(cmdName, options, fn) {
+					realGroup.addCommand(cmdName, options, fn);
+					commandsToRemove.push(cmdName);
+				}
+			}
+			else if ("cleanupMethods" == name) {
+				return function() {
+					tmpbot.cleanupMethods();
+					for(var i = 0; i < commandsToRemove.length; i++) {
+						realGroup.delCommand(commandsToRemove[i]);
+					}
+				}
+			}
+			else if ("on" == name) {
+				return tmpbot.on;
+			}
+			else if ("bot" == name) {
+				for(var i in realGroup.bots) {
+					// prevent overwriting old bots that might have had 
+					if (!newbots[i])
+						newbots[i] = fakeBot(realGroup.bots[i], self);
+				}
+				for(var i in newbots) {
+					if (!realGroup.bots[i]) {
+						delete newbots[i];
+					}
+				}
+				return newbots;
+			}
+			else {
+				return realGroup[name];
+			}
+		}
+	});
 }
-fakeGroup.prototype.delBot = function(botOrName) {
-	return this.realGroup.delBot(botOrName);
-}
-fakeGroup.prototype.addNetwork = function(networkName,connectionStringOrStrings) {
-	return this.realGroup.addNetwork(networkName,connectionStringOrStrings);
-}
-fakeGroup.prototype.delNetwork = function(networkOrName) {
-	return this.realGroup.delNetwork(networkOrName);
-}
-fakeGroup.prototype.init = function() {
-	return this.realGroup.init();
-}
-fakeGroup.prototype.addBot = function(botOrName,options) {
-	return this.realGroup.addBot(botOrName,options);
-}
+module.exports = createFakeGroup;
