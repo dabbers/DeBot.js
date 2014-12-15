@@ -15,7 +15,7 @@ function createFakeGroup(realGroup) {
 	var newbots = {};
 	var self = this;
 
-	return Proxy(tmpbot, {
+	return Proxy(tmpgroup, {
 		get:function(proxy, name) {
 			if ("addCommand" == name) {
 				return function(cmdName, options, fn) {
@@ -25,18 +25,18 @@ function createFakeGroup(realGroup) {
 			}
 			else if ("cleanupMethods" == name) {
 				return function() {
-					tmpbot.cleanupMethods();
+					tmpgroup.cleanupMethods();
 					for(var i = 0; i < commandsToRemove.length; i++) {
 						realGroup.delCommand(commandsToRemove[i]);
 					}
 				}
 			}
 			else if ("on" == name) {
-				return tmpbot.on;
+				return tmpgroup.on;
 			}
 			else if ("bot" == name) {
 				for(var i in realGroup.bots) {
-					// prevent overwriting old bots that might have had 
+					// prevent overwriting old bots that might have callbacks created
 					if (!newbots[i])
 						newbots[i] = fakeBot(realGroup.bots[i], self);
 				}

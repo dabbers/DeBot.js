@@ -1,16 +1,5 @@
 var Command = require('./Command');
 
-var defaultOptions = {
-	"channelbind" : [],
-	"serverbind" : [],
-	"level" : 1,
-	"allowpm" : false,
-	"hidden" : false,
-	"exception": [],
-	"timer":5, // 5 seconds between command calls.
-	"code": function() { }
-};
-
 function Commandable() {
 	var self = this;
 	this.commands = {};
@@ -22,12 +11,13 @@ function Commandable() {
 		var timerOverridden = false;
 		
 console.tmp("fce", 1);
+		var curdate = msg.timestamp.getTime();
 		// Check for channel exceptions
 		for(var i = 0; i < command.exceptions.channels.length; i++) {
 			if (i == message.To.Parts[0]) {
 				timerOverridden = true;
 
-				if (new Date().getTime() - command.exceptions.channels[i].time < command.options.timer) {
+				if (curdate - command.exceptions.channels[i].time < command.options.timer) {
 					return false;
 				}
 				command.exceptions.channels[i].time = new Date().getTime();
@@ -47,8 +37,10 @@ console.tmp("fce", 2);
 				break;
 			}
 		}
-console.tmp("fce", 3);		
-		if (command.options.timer != 0 && !timerOverridden && new Date().getTime() - command.time <= command.options.timer) {
+
+		var diff = curdate - command.time;
+console.tmp("fce", 3, diff, command.options.timer);		
+		if (command.options.timer != 0 && !timerOverridden && diff <= command.options.timer) {
 console.tmp("fce", message.Parts[3], 1);
 console.tmp("fce", message.Parts[4]);
 console.tmp("fce", message.From.Parts[0]);
@@ -67,14 +59,14 @@ console.tmp("fce", 5);
 console.tmp("fce", 6);
 
 
-		command.time = new Date().getTime();
+		command.time = curdate;
 		return true;
 	}
 
 
 	if (this.on) {
 		this.on("OnPrivmsg", function(server, msg) {
-			var cmd = msg.Parts[3].substring(1);
+			var cmd = msg.Parts[3].substring(1).toLowerCase();
 
 			if (self.commands[cmd] && this.functionCanExecute(server, self.commands[cmd], msg)) {
 				self.commands[cmd].callback(server, server.isChannel(msg.To.Parts[0]) ? server.Channels[msg.To.Parts[0]] : {"isChannel":false, "Display":msg.From.Parts[0], "Parts":["", "", msg.To.Parts[0]]}, msg);
@@ -87,18 +79,22 @@ console.tmp("fce", 6);
 
 		if (!fn) {
 			fn = options;
-			options = defaultOptions;
+			options = JSON.parse(JSON.stringify(Core.defaultOptions));;
 		}
+		string = string.toLowerCase();
 
 		if (typeof fn != "function") {
 			throw {"message":"Invalid data type passed for function parameter.", "stack":new Error().stack};
 		}
+		var defaultopt = JSON.parse(JSON.stringify(Core.defaultOptions));
 
-		for(var key in defaultOptions) {
-			console.log(key, options[key]);
-			if (undefined === options[key]) options[key] = defaultOptions[key];
-			console.log(key, options[key]);
-		}
+		for(var key in defaultopt) {
+
+			if (defaultopt.hasOwnProperty(key) && undefined === options[key]) 
+				options[key] = defaultopt[key];
+		} 
+
+		options["timer"] = options["timer"] * 1000;
 
 		self.commands[string] = { 
 			"command":string,
@@ -114,6 +110,7 @@ console.tmp("fce", 6);
 			fn = options;
 			options = {};
 		}
+		string = string.toLowerCase();
 
 		// merge user supplied options to our command
 		for(var i in options) {
@@ -121,6 +118,9 @@ console.tmp("fce", 6);
 				self.commands[string].options[i] = options[i];
 			}
 		}
+
+		if (options["timer"])
+			self.commands[string].options["timer"] *= 1000;
 
 		if (fn) {
 			self.commands[string].callback = fn;
@@ -130,6 +130,7 @@ console.tmp("fce", 6);
 	}
 
 	this.delCommand = function(string) {
+		string = string.toLowerCase();
 		if (self.commands[string])
 			delete self.commands[string];
 	}
@@ -139,6 +140,8 @@ console.tmp("fce", 6);
 			"type":"", // channel, user, chanmode
 			"time":0
 		};
+		string = string.toLowerCase();
+		return true;
 	}
 
 	this.listExceptions = function(string) {
@@ -147,6 +150,43 @@ console.tmp("fce", 6);
 
 	this.removeException = function(string, on) {
 
+		return true;
+	}
+
+	this.addChanbind = function(string, on, to) {
+		var exceptionEntry = {
+			"type":"", // channel, user, chanmode
+			"time":0
+		};
+		string = string.toLowerCase();
+		return true;
+	}
+
+	this.listChanbind = function(string) {
+
+	}
+
+	this.removeChanbind = function(string, on) {
+
+		return true;
+	}
+
+	this.addServerbind = function(string, on, to) {
+		var exceptionEntry = {
+			"type":"", // channel, user, chanmode
+			"time":0
+		};
+		string = string.toLowerCase();
+		return true;
+	}
+
+	this.listServerbind = function(string) {
+
+	}
+
+	this.removeServerbind = function(string, on) {
+
+		return true;
 	}
 
 	var USER_REGEX = /[!@]/;
@@ -174,7 +214,6 @@ console.tmp("fce", 6);
 						if (!self.loggedin[server.alias]) self.loggedin[server.alias] = {}
 
 						self.loggedin[server.alias][msg.From.Parts[0]] = {"nick":msg.From.Parts[0], "level":auths[i].level};
-					console.log(self.loggedin);
 						return true;
 					}
 				}

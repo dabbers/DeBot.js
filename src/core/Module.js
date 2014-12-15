@@ -10,14 +10,23 @@ function Module(callback) {
 
 	return function() {
 		var self = this;
-		this.init = function(realBot) {
+		this.init = function(realBotOrGroup) {
+			var group = realBotOrGroup;
+			var fakebot = null;
 
-			var fakegroup = new fakeGroupOverrides(realBot.group);
-console.tmp("Module::fakeBot", fakeBot);
-			var fakebot = fakeBot(realBot, fakegroup);
+			if (realBotOrGroup instanceof Bot) {
+				group = realBotOrGroup.group;
+				fakebot = fakeBot(realBotOrGroup, group);
+			}
+			else {
+				realBotOrGroup = null;
+			}
+
+			var fakegroup = new fakeGroup(group);
 
 			self.uninit = function() {
-				fakebot.cleanupMethods();
+				if (fakebot)
+					fakebot.cleanupMethods();
 				
 				for(var i in fakegroup.bots) {
 					fakegroup.bots[i].cleanupMethods();
@@ -33,32 +42,3 @@ console.tmp("Module::fakeBot", fakeBot);
 };
 
 exports.module = Module;
-/*
-
-function fakeBotOverrides(realBot, fakegroup) {
-	fakeBot.call(this, realBot);
-
-	this.__defineGetter__('group', function(){
-		fakegroup.passer = realBot;
-		return fakegroup;
-	});
-}
-util.inherits(fakeBotOverrides, fakeBot);
-*/
-function fakeGroupOverrides(realgroup) {
-	fakeGroup.call(this, realgroup);
-
-	var newbots = {};
-	var self = this;
-
-	this.__defineGetter__('bots', function(){
-		for(var i in realgroup.bots) {
-			// prevent overwriting old bots that might have had 
-			if (!newbots[i])
-				newbots[i] = fakeBot(realgroup.bots[i], self);
-		}
-
-		return newbots;
-	});
-}
-util.inherits(fakeGroupOverrides, fakeGroup);

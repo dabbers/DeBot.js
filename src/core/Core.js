@@ -18,6 +18,28 @@ Core.prototype.config = undefined;
 
 Core.prototype.defaultGroupSetting = {"Networks":[], "Bots":{}, "Channels":[], "Modules":[], "CommandPrefix":"!"};
 Core.prototype.defaultBotSetting = {"Ident":"dbt", "Networks":[], "Bots":{}, "Channels":[], "Modules":[]};
+Core.prototype.defaultOptions = {
+	"channelbind" : [],
+	"serverbind" : [],
+	"level" : 1,
+	"allowpm" : false,
+	"hidden" : false,
+	"exception": [],
+	"timer":5, // 5 seconds between command calls.
+	"persit":true,
+	"code": function() { }
+};
+Core.prototype.defaultOptionsHelp = {
+	"channelbind":"(list/add/remove) Use this to lock the command to an array of channels. Can use prefix before channel for modebind (ie: @#cha*l*)",
+	"serverbind":"(list/add/remove) Use this to lock the command to an array of server aliases",
+	"level":"The minimum level required for this command. Default, everyone is level 1",
+	"allowpm":"Allow the command to be issued in a private message",
+	"hidden":"If this command is to not be listed in a listing",
+	"exception":"(list/add/remove) Timer exceptions on user mode:seconds (ie: @:4), level:seconds (ie: 1:5), and nick:2 (ie: nick:sec or [*!*@*:5])",
+	"timer":"The timer throttle for the command between each command",
+	"persit":"If this command should be written to file so it can be reloaded upon bot load",
+	"code":"The code to execute on command call"
+}
 
 Core.prototype.addGroup = function(groupName, settings) {
 	for(var key in this.defaultGroupSetting) {
@@ -49,7 +71,7 @@ Core.prototype.createBot = function(botName, groupName, settings) {
 		}
 		else
 		{
-			settings = groupName || this.defaultBotSetting;
+			settings = groupName || JSON.parse(JSON.stringify(this.defaultBotSetting));
 			groupName = botName;
 		}
 	}

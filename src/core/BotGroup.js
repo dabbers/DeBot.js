@@ -4,12 +4,14 @@ var util = require('util');
 var Bot = require('./Bot');
 var Network = require('./Network');
 var Commandable = require('./Commandable');
+var moduleHandler = require('./ModuleHandler');
 
 function BotGroup(name, settings) {
 	events.EventEmitter.call(this);
 	Commandable.call(this);
+	moduleHandler(this);
 
-	settings = settings || Core.defaultGroupSetting;
+	settings = settings || JSON.parse(JSON.stringify(Core.defaultGroupSetting));
 	var self = this;
 	this.bots = {};
 	var loaded = false;
@@ -105,10 +107,13 @@ function BotGroup(name, settings) {
 				self.emit("OnPrivmsg", server, msg);
 			});
 		}
+		
 		for(var network in settings.Networks) {
 			self.addNetwork(settings.Networks[network]);
 		}
-
+		for(var i in settings.Modules) {
+			self.loadModule(settings.Modules[i]);
+		}
 		loaded = true;
 	}
 
@@ -127,7 +132,7 @@ function BotGroup(name, settings) {
 		return settings;
 	})
 
-	function botIsExecutor(serverAlias, botNick, channel) {
+	this.botIsExecutor = function(serverAlias, botNick, channel) {
 		var indx = 0;
 
 		var firstbot = Object.keys(self.bots)[0];
@@ -136,9 +141,7 @@ function BotGroup(name, settings) {
 			!self.networks[serverAlias].nickIsInChannel(self.bots[firstbot].Nick, channel) 
 			&& indx + 1 < Object.keys(self.bots).length
 		) {
-			console.log("isExecutor", botNick, firstbot);
 			firstbot = Object.keys(self.bots)[++indx];
-			console.log("isExecutor", botNick, firstbot);
 		}
 
 		return botNick == firstbot;
@@ -157,7 +160,7 @@ function BotGroup(name, settings) {
 		bot = self.passer;
 		var group = self; // alias/shortcut
 
-		if (channel.isChannel && !botIsExecutor(server.alias, bot.Nick, channel.Display)) {
+		if (channel.isChannel && !self.botIsExecutor(server.alias, bot.Nick, channel.Display)) {
 			//channel = server.Channels[msg.Parts[2]];
 			return;
 		}
@@ -194,60 +197,32 @@ function BotGroup(name, settings) {
 		}
 	});
 
-	// Command management:
+	self.join = function(net, chan, pass) {
+		// Check if pass provided because that means the other 2 aren't what they
+		// are supposed to be if no pass is provided
+		if (!pass) {
 
-	self.addCommand(command_prefix + "addcmd", {"level":3, "timer":0}, function(server, channel, msg) {
-		bot = self.passer;
-		var group = self; // alias/shortcut
-
-		if (channel.isChannel && !botIsExecutor(server.alias, bot.Nick, channel.Display)) {
-			//channel = server.Channels[msg.Parts[2]];
-			return;
+			// verify if net is actually a network
+			if (!self.sockets[net]) {
+				// net is a channel. Check if password provided
+				if (chan) {
+					pass = chan;
+				}
+				chan = net;
+				net = lastnet;
+			}
 		}
 
-
-
-	});
-	self.addCommand(command_prefix + "setcmd", {"level":3, "timer":0}, function(server, channel, msg) {
-		bot = self.passer;
-		var group = self; // alias/shortcut
-
-		if (channel.isChannel && !botIsExecutor(server.alias, bot.Nick, channel.Display)) {
-			//channel = server.Channels[msg.Parts[2]];
-			return;
+		for(var bot in self.bots) {
+			self.bots[bot].sockets[net].Write("JOIN " + chan + " " + pass);
 		}
+	}
 
-		
-
-	});
-	self.addCommand(command_prefix + "delcmd", {"level":3, "timer":0}, function(server, channel, msg) {
-		bot = self.passer;
-		var group = self; // alias/shortcut
-
-		if (channel.isChannel && !botIsExecutor(server.alias, bot.Nick, channel.Display)) {
-			//channel = server.Channels[msg.Parts[2]];
-			return;
-		}
-
-		
-
-	});
-	self.addCommand(command_prefix + "getcmd", {"level":3, "timer":0}, function(server, channel, msg) {
-		bot = self.passer;
-		var group = self; // alias/shortcut
-
-		if (channel.isChannel && !botIsExecutor(server.alias, bot.Nick, channel.Display)) {
-			//channel = server.Channels[msg.Parts[2]];
-			return;
-		}
-
-		
-
-	});
 
 }
 util.inherits(BotGroup, Commandable);
-util.inherits(BotGroup, EventEmitter);
-util.inherits(Bot, EventEmitter);
+util.inherits(BotGroup,EventEmitter);
+util.inherits(Bot, 	  moduleHandler);
+util.inherits(Bot,     EventEmitter);
 
 module.exports = BotGroup;

@@ -3,13 +3,16 @@ var util = require('util');
 var irc = require('dabbit.base');
 var socket = require('./NodeSocket');
 var commandable = require('./Commandable');
+var moduleHandler = require('./ModuleHandler');
 
 function Bot(nick, group, settings) {
-	events.EventEmitter.call(this);
 	irc.User.call(this);
+	events.EventEmitter.call(this);
 
-	var lastchan = "#dab";
-	var lastnet = "dab";
+	var lastchan = "#lastchannel";
+	var lastnet = "lastnetwork";
+
+	moduleHandler(this);
 
 	// We want to set our last net/chan stuff before the commandable interface
 	// tries making calls out. So we register our onPrivmsg first.
@@ -18,42 +21,16 @@ function Bot(nick, group, settings) {
 		lastnet = serv.alias;
 	});
 
-
 	commandable.call(this);
 
 	var self = this;
 	var al = nick;
 
-	var modules = {};
 	this.sockets = {};
 
 	this.__defineGetter__('alias', function(){
 		return al;
 	});
-
-	this.loadModule = function(modname) {
-		//try {
-			var modpath = Core.relativeToAbsolute('modules/'+ modname);
-			if (require.cache[modpath]) delete require.cache[mod_file];
-
-			var module1 = require(modpath);
-			modules[modname] = module1;
-			module1.init(self);
-		/*}
-		catch(ex) {
-			console.log("Failed to load module. ", ex, new Error().stack);
-			return false;
-		}*/
-
-		return modules[modname];
-	}
-
-	this.unloadModule = function(modname) {
-		if (modules[modname]) {
-			modules[modname].uninit();
-			delete modules[modname];
-		}
-	}
 
 	this.__defineGetter__('group', function(){
 		group.passer = self;
@@ -79,6 +56,7 @@ function Bot(nick, group, settings) {
 		}
 	});
 
+	// NEVER call this function yourself. Use BotGroup's addNetwork function.
 	this.connect = function(name, connectInfo) {
 		if (!name) throw "Name is required (first param)";
 		if (!connectInfo || !connectInfo.host) throw "connectInfo object is required. Keys: host (required), port (6667 default), ssl (false default)";
@@ -124,8 +102,56 @@ function Bot(nick, group, settings) {
 		self.sockets[net].Write("PRIVMSG " + chan + " :" + msg);
 	}
 
+	/*
+	 * Either .say(message)
+	 * Or     .say(channel, msg)
+	 * or     .say(network, channel, msg)
+	 */
+	this.notice = function(net, chan, msg) {
+		if (!msg) {
+			if (!chan) {
+				msg = net;
+				chan = lastchan;
+				net = lastnet;
+			}
+			else {
+				msg = chan;
+				chan = net;
+				net = lastnet;
+			}
+		}
+		self.sockets[net].Write("NOTICE " + chan + " :" + msg);
+	}
+
+	/*
+	 * Either .say(message)
+	 * Or     .say(channel, msg)
+	 * or     .say(network, channel, msg)
+	 */
+	this.raw = function(net, msg) {
+		if (!msg) {
+			msg = net;
+			net = lastnet;
+		}
+
+		self.sockets[net].Write(msg);
+	}
+
 	this.me = function(net, chan, msg) {
-		// todo
+		if (!msg) {
+			if (!chan) {
+				msg = net;
+				chan = lastchan;
+				net = lastnet;
+			}
+			else {
+				msg = chan;
+				chan = net;
+				net = lastnet;
+			}
+		}
+
+		self.say(net, chan, "\001ACTION " + msg + "\001");
 	}
 
 	/*
@@ -176,13 +202,9 @@ function Bot(nick, group, settings) {
 		}
 		self.sockets[net].Write("PART " + chan + " :" + reason);
 	}
-
 }
-util.inherits(Bot, events.EventEmitter);
 util.inherits(Bot, 			  irc.User);
-util.inherits(Bot, 			  commandable);
-
-// NEVER call this function yourself. Use BotGroup's addNetwork function.
+util.inherits(Bot, events.EventEmitter);
 
 
 // Overwrite .emit to allow cancelling 

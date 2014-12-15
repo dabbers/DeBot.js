@@ -15,9 +15,9 @@ function DictionaryArray(propertyKey) {
             //var property = ArgInfo.property;
             if ("push" == property) {
                 return function(ob) {
-                        lists.push(ob);
-                        dict[ob[propertyKey || "key"]] = ob;
-                    }
+                    lists.push(ob);
+                    dict[ob[propertyKey || "key"]] = ob;
+                }
             }
             else if ("length" == property) {
                 return lists.length;
@@ -55,12 +55,8 @@ function DictionaryArray(propertyKey) {
             else {
                 return lists[property];
             }
-                
         },
         set: function( proxy, property, value ) {
-           // var property = ArgInfo.property
-            //var value = ArgInfo.value;
-
             if (isNaN(property)) {
                 if (!dict[property]) {
 
@@ -81,7 +77,7 @@ function DictionaryArray(propertyKey) {
                         return {value: lists[keys[index++]][propertyKey], done:false};
                 };
                 return this;
-            }) ()
+            }) ();
         },
         keys: function() {  
             return Object.keys(dict);
