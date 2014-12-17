@@ -11,7 +11,7 @@ function Commandable() {
 		var timerOverridden = false;
 		
 console.tmp("fce", 1);
-		var curdate = msg.timestamp.getTime();
+		var curdate = message.Timestamp.getTime();
 		// Check for channel exceptions
 		for(var i = 0; i < command.exceptions.channels.length; i++) {
 			if (i == message.To.Parts[0]) {

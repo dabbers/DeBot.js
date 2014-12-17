@@ -66,7 +66,7 @@ function Network(group, ctx, name) {
 
 
     this.IsThisMe = function(usr, type) {
-        return usr == group.passer.Nick && "PART" != type;
+        return usr.toLowerCase() == group.passer.Nick.toLowerCase() && "PART" != type;
     }
 
     //this.Events = new events.EventEmitter();
@@ -76,6 +76,13 @@ function Network(group, ctx, name) {
 
     this.PerformConnect = function(bot) {
         var botcopy = bot;
+        botcopy.Nicks[name] = bot.Nick;
+
+        botcopy.on('OnNickChange', function(svr, msg) {
+            console.log("KLJSDFLKJDLKFDLSKFJSDFJLKDSFJKLDSFJLKDSFKLDSJF");
+            botcopy.Nicks[name] = bot.Nick;
+        });
+
         botcopy.on('OnCap', function(svr, msg) { 
             // remove leading : so we can do a direct check
             msg.Parts[4] = msg.Parts[4].substring(1);
@@ -104,6 +111,7 @@ function Network(group, ctx, name) {
                 hostInNames = true;
                 botcopy.sockets[name].Write("PROTOCTL UHNAMES");
             }
+            botcopy.sockets[name].Write("MODE " + botcopy.Nick + " +B");
         });
 
         botcopy.on('OnWhois', function(svr, msg) { 
@@ -126,7 +134,11 @@ function Network(group, ctx, name) {
         });
 
         // Luckily javascript is single threaded... this would not work if it wasn't.
-        botcopy.sockets[name].ConnectAsync(function(msg) { group.passer = botcopy; self.rawMessageReceived(msg) });
+        botcopy.sockets[name].ConnectAsync(function(msg) { 
+            group.passer = botcopy; 
+            botcopy.Nick = botcopy.Nicks[name];
+            self.rawMessageReceived(msg) 
+        });
 
         botcopy.sockets[name].Write("CAP LS"); // Get list of extras (For multi prefix)
         

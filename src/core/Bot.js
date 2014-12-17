@@ -47,6 +47,7 @@ function Bot(nick, group, settings) {
 	var usableSettings = (settings || group);
 
 	this.Nick = usableSettings.Nick;
+	this.Nicks = {};
 	this.Ident = usableSettings.Ident;
 	this.Name = Core.config.OwnerNicks + "'s bot";
 
