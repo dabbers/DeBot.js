@@ -52,11 +52,13 @@ function NodeSocket(host, port, ssl) {
         // got a \n? emit one or more 'line' events
         while (~n) {
             //stream.emit('line', backlog.substring(0, n))
+            var res = backlog.substring(0, n);
+
             if (backlog[n-1] == '\r') {
-                rdCb(backlog.substring(0, n-1));
-            } else {
-                rdCb(backlog.substring(0, n));
+                res = backlog.substring(0, n-1);
             }
+            //console.log("<= ", res);
+            rdCb(res);
 
             backlog = backlog.substring(n + 1);
             n = backlog.indexOf('\n');
@@ -78,10 +80,15 @@ function NodeSocket(host, port, ssl) {
     this.write = function(message) {
         var date = new Date().getTime();
         if (typeof message == "string") {
-            queue.queue({"timestamp":date, "message":message});
+            if (queue.length == 0) {
+                this.Writer.write(message + "\r\n");
+            }
+            else 
+                queue.queue({"timestamp":date, "message":message});
         }
         else if (message.constructor === Array) {
             if (message.length == 1 && queue.length == 0) {
+                console.log(" |=> ", "'" + message + "'");  
                 this.Writer.write(message + "\r\n");
             }
             else {
@@ -102,6 +109,7 @@ function NodeSocket(host, port, ssl) {
     });
 
     this.__defineGetter__("Writer", function() {
+        console.log("Write", new Date().getTime());
         return socket;
     });
 
@@ -111,7 +119,10 @@ function NodeSocket(host, port, ssl) {
 
     this.tick = function() {
         if (queue.length > 0 ) {
-            this.Writer.write(queue.dequeue().message + "\r\n");
+            var msg = queue.dequeue().message;
+
+            //console.log(" => ", "'" + msg + "'");
+            this.Writer.write(msg + "\r\n");
         }
     }
 

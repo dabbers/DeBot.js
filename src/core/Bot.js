@@ -6,27 +6,10 @@ var commandable = require('./Commandable');
 var moduleHandler = require('./ModuleHandler');
 
 function Bot(nick, group, settings) {
-	irc.User.call(this);
-	events.EventEmitter.call(this);
-
-	var lastchan = "#lastchannel";
-	var lastnet = "lastnetwork";
-
-	moduleHandler(this);
-
-	// We want to set our last net/chan stuff before the commandable interface
-	// tries making calls out. So we register our onPrivmsg first.
-	this.on('OnPrivmsg', function(serv, msg) {
-		lastchan = (msg.To.Type == "Client" ? msg.From.Parts[0] : msg.To.Parts[0]);
-		lastnet = serv.alias;
-	});
-
-	commandable.call(this);
-
+	this.isBot = true;
+	
 	var self = this;
 	var al = nick;
-
-	this.sockets = {};
 
 	this.__defineGetter__('alias', function(){
 		return al;
@@ -36,7 +19,27 @@ function Bot(nick, group, settings) {
 		group.passer = self;
 		return group;
 
-	})
+	});
+
+	irc.User.call(this);
+	events.EventEmitter.call(this);
+
+	this.lastChannel = "#lastchannel";
+	this.lastNetwork = "lastnetwork";
+
+	moduleHandler(this);
+
+	// We want to set our last net/chan stuff before the commandable interface
+	// tries making calls out. So we register our onPrivmsg first.
+	this.on('OnPrivmsg', function(serv, msg) {
+		self.lastChannel = (msg.To.Type == "Client" ? msg.From.Parts[0] : msg.To.Parts[0]);
+		self.lastNetwork = serv.alias;
+	});
+
+	commandable.call(this);
+
+	this.sockets = {};
+
 
 	this.tick = function() {
 		for(var i in self.sockets) {
@@ -47,9 +50,10 @@ function Bot(nick, group, settings) {
 	var usableSettings = (settings || group);
 
 	this.Nick = usableSettings.Nick;
-	this.Nicks = {};
+	this.Hosts = {};
 	this.Ident = usableSettings.Ident;
 	this.Name = Core.config.OwnerNicks + "'s bot";
+
 
 	this.on("OnConnectionEstablished", function(server, msg) {
 		for(var chan in usableSettings.Channels) {
@@ -91,15 +95,16 @@ function Bot(nick, group, settings) {
 		if (!msg) {
 			if (!chan) {
 				msg = net;
-				chan = lastchan;
-				net = lastnet;
+				chan = self.lastChannel;
+				net = self.lastNetwork;
 			}
 			else {
 				msg = chan;
 				chan = net;
-				net = lastnet;
+				net = self.lastNetwork;
 			}
 		}
+		console.log("BOT.SAY", net, chan, msg);
 		self.sockets[net].Write("PRIVMSG " + chan + " :" + msg);
 	}
 
@@ -112,13 +117,13 @@ function Bot(nick, group, settings) {
 		if (!msg) {
 			if (!chan) {
 				msg = net;
-				chan = lastchan;
-				net = lastnet;
+				chan = self.lastChannel;
+				net = self.lastNetwork;
 			}
 			else {
 				msg = chan;
 				chan = net;
-				net = lastnet;
+				net = self.lastNetwork;
 			}
 		}
 		self.sockets[net].Write("NOTICE " + chan + " :" + msg);
@@ -132,7 +137,7 @@ function Bot(nick, group, settings) {
 	this.raw = function(net, msg) {
 		if (!msg) {
 			msg = net;
-			net = lastnet;
+			net = self.lastNetwork;
 		}
 
 		self.sockets[net].Write(msg);
@@ -142,13 +147,13 @@ function Bot(nick, group, settings) {
 		if (!msg) {
 			if (!chan) {
 				msg = net;
-				chan = lastchan;
-				net = lastnet;
+				chan = self.lastChannel;
+				net = self.lastNetwork;
 			}
 			else {
 				msg = chan;
 				chan = net;
-				net = lastnet;
+				net = self.lastNetwork;
 			}
 		}
 
@@ -173,7 +178,7 @@ function Bot(nick, group, settings) {
 					pass = chan;
 				}
 				chan = net;
-				net = lastnet;
+				net = self.lastNetwork;
 			}
 		}
 
@@ -198,7 +203,7 @@ function Bot(nick, group, settings) {
 					reason = chan;
 				}
 				chan = net;
-				net = lastnet;
+				net = self.lastNetwork;
 			}
 		}
 		self.sockets[net].Write("PART " + chan + " :" + reason);

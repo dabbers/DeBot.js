@@ -4,7 +4,7 @@ var events = require('events');
 
 
 function Network(group, ctx, name) {
-    var whoisLibraryRequested = [];
+    this.whoisLibraryRequested = [];
 
     var serverType = ServerType.Unknown; // ServerType
 
@@ -76,12 +76,22 @@ function Network(group, ctx, name) {
 
     this.PerformConnect = function(bot) {
         var botcopy = bot;
-        botcopy.Nicks[name] = bot.Nick;
+        botcopy.Hosts[name] = {"Nick": bot.Nick,"Ident": bot.Ident,"Host": bot.Host,    };
 
         botcopy.on('OnNickChange', function(svr, msg) {
-            console.log("KLJSDFLKJDLKFDLSKFJSDFJLKDSFJKLDSFJLKDSFKLDSJF");
-            botcopy.Nicks[name] = bot.Nick;
+            console.log("NICK CHANGE", JSON.stringify(msg.Who));
+            botcopy.Hosts[name].Nick = botcopy.Nick; // Update even if the bot isn't the one doing the /nick
         });
+
+        var attempts = 1;
+
+        var nick_in_use = function() {
+            botcopy.Nick = botcopy.Nick + new Array(attempts + 1).join("`");
+            botcopy.Hosts[name].Nick = botcopy.Nick;
+            botcopy.sockets[name].Write("NICK " + botcopy.Nick);
+            attempts++;
+        };
+        botcopy.on("433", nick_in_use);
 
         botcopy.on('OnCap', function(svr, msg) { 
             // remove leading : so we can do a direct check
@@ -101,7 +111,7 @@ function Network(group, ctx, name) {
 
         botcopy.on('OnConnectionEstablished', function(svr, msg) {
             botcopy.sockets[name].Write("WHOIS " + botcopy.Nick);
-            whoisLibraryRequested.push(botcopy.Nick);
+            //whoisLibraryRequested.push(botcopy.Nick);
 
             if (self.Attributes["NAMESX"]) {
                 multiModes = true;
@@ -112,10 +122,17 @@ function Network(group, ctx, name) {
                 botcopy.sockets[name].Write("PROTOCTL UHNAMES");
             }
             botcopy.sockets[name].Write("MODE " + botcopy.Nick + " +B");
+            botcopy.removeListener("433", nick_in_use);
+            attempts = 0;
         });
 
         botcopy.on('OnWhois', function(svr, msg) { 
-            whoisLibraryRequested.Remove(tempWhois.Nick);
+            if (msg.Who.Nick == botcopy.Nick) {
+                botcopy.Ident = msg.Who.Ident;
+                botcopy.Host = msg.Who.Host;
+                botcopy.Hosts[name].Ident = msg.Who.Ident;
+                botcopy.Hosts[name].Host = msg.Who.Host;
+            }
         });
 
         botcopy.on('OnPing', function(svr, msg) {
@@ -136,7 +153,9 @@ function Network(group, ctx, name) {
         // Luckily javascript is single threaded... this would not work if it wasn't.
         botcopy.sockets[name].ConnectAsync(function(msg) { 
             group.passer = botcopy; 
-            botcopy.Nick = botcopy.Nicks[name];
+            botcopy.Nick = botcopy.Hosts[name].Nick;
+            botcopy.Ident = botcopy.Hosts[name].Ident;
+            botcopy.Host = botcopy.Hosts[name].Host;
             self.rawMessageReceived(msg) 
         });
 

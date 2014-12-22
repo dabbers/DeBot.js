@@ -8,18 +8,10 @@ module.exports = new (DeBot.module(function (bot, group) {
 
 	var command_prefix = group.settings.CommandPrefix;
 
-	group.addCommand(command_prefix + "hello", function(server, channel, msg) { 
-		bot = group.passer;
-		bot.say("Hello there " + msg.From.Parts[0] );
-	});
-
-
-
 	// Command management:
-
 	group.addCommand(
 		command_prefix + "addcmd", 
-		{"level":3, "timer":0}, 
+		{"level":3, "timer":0, "persist":false}, 
 		function(server, channel, msg) {
 			bot = group.passer;
 
@@ -82,7 +74,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 
 	group.addCommand(
 		command_prefix + "setcmd", 
-		{"level":3, "timer":0}, 
+		{"level":3, "timer":0, "persist":false},
 		function(server, channel, msg) {
 			bot = group.passer;
 
@@ -245,7 +237,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 	);
 	group.addCommand(
 		command_prefix + "delcmd", 
-		{"level":3, "timer":0}, 
+		{"level":3, "timer":0, "persist":false}, 
 		function(server, channel, msg) {
 			bot = group.passer;
 
@@ -271,7 +263,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 	);
 	group.addCommand(
 		command_prefix + "getcmd", 
-		{"level":3, "timer":0}, 
+		{"level":3, "timer":0, "persist":false}, 
 		function(server, channel, msg) {
 			bot = group.passer;
 

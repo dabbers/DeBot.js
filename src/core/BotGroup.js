@@ -7,6 +7,12 @@ var Commandable = require('./Commandable');
 var moduleHandler = require('./ModuleHandler');
 
 function BotGroup(name, settings) {
+	this.isBot = false;
+
+	this.__defineGetter__('alias', function(){
+		return name;
+	});
+
 	events.EventEmitter.call(this);
 	Commandable.call(this);
 	moduleHandler(this);
@@ -19,11 +25,12 @@ function BotGroup(name, settings) {
 	this.networks = {};
 	this.settings = settings;
 
-	this.tick = function() {
+	this.on('tick', function() {
 		for(var i in self.bots) {
 			self.bots[i].tick();
 		}
-	}
+	});
+
 
 	this.addBot = function(botOrName, options) {
 		// createBot will call this function again once the bot is created.
@@ -42,7 +49,7 @@ function BotGroup(name, settings) {
 					}
 				});
 				botOrName.on("OnPrivmsg", function(server, msg) {
-					self.emit("OnPrivmsg", server, msg);
+					self.emit("OnPrivmsg", server, msg, botOrName);
 				});
 
 				for(var networkName in settings.Networks) {
@@ -132,19 +139,37 @@ function BotGroup(name, settings) {
 		return settings;
 	})
 
-	this.botIsExecutor = function(serverAlias, botNick, channel) {
-		var indx = 0;
 
-		var firstbot = Object.keys(self.bots)[0];
+	/*
+	 * Returns a Bot object that can execute in this environment
+	 * Converts the botNick into a bot instance if in a PM/Query.
+	 */
+	this.getBotExecutor = function(serverAlias, botNick, channel) {
+		if (!channel.isChannel) return self.bots[botNick];
+
+		var indx = 0;
+		var botkeys = Object.keys(self.bots);
+		var firstbot = botkeys[0];
 
 		while(
-			!self.networks[serverAlias].nickIsInChannel(self.bots[firstbot].Nick, channel) 
+			!self.networks[serverAlias].nickIsInChannel(self.bots[firstbot].Hosts[serverAlias].Nick, channel) 
 			&& indx + 1 < Object.keys(self.bots).length
 		) {
 			firstbot = Object.keys(self.bots)[++indx];
 		}
+		
+		bot.lastNetwork = serverAlias;
+		bot.lastChannel = channel.Display;
 
-		return botNick == firstbot;
+		return self.bots[firstbot];
+	}
+
+	/*
+	 * Determines if this bot can execute in this environment. 
+	 */
+	this.botIsExecutor = function(serverAlias, botNick, channel) {
+
+		return botNick == self.getBotExecutor(serverAlias, botNick, channel).Hosts[serverAlias].Nick;
 	}
 
 
@@ -156,27 +181,21 @@ function BotGroup(name, settings) {
 	// Not a pretty data flow, but effective.
 
 	// Raw eval command.
-	self.addCommand(settings.RawCommandPrefix || (command_prefix + command_prefix), {"level":3, "timer":0}, function(server, channel, msg) {
+	self.addCommand(settings.RawCommandPrefix || (command_prefix + command_prefix), {"level":3, "timer":0, "persist":false}, function(server, channel, msg) {
 		bot = self.passer;
 		var group = self; // alias/shortcut
 
-		if (channel.isChannel && !self.botIsExecutor(server.alias, bot.Nick, channel.Display)) {
+		if (!self.botIsExecutor(server.alias, bot.Nick, channel.Display)) {
 			//channel = server.Channels[msg.Parts[2]];
 			return;
 		}
 
-		var lines = [];
-		console.log = Core.createLogWrapper(lines,  channel.Display);
-		global.echo = console.log;
 
 		eval(msg.Parts.splice(4).join(" "));
-
-		console.log = console.tmp;
-		bot.sockets[server.alias].Write(lines);
 	});
 
 	// a handy clear buffer command in case you start spamming the channel.
-	self.addCommand(command_prefix + "clearbuffer", {"level":3, "timer":0}, function(server, channel, msg) {
+	self.addCommand(command_prefix + "clearbuffer", {"level":3, "timer":0, "persist":false}, function(server, channel, msg) {
 		bot = self.passer;
 		var group = self; // alias/shortcut
 
@@ -186,7 +205,7 @@ function BotGroup(name, settings) {
 	});
 
 	// Logging in. Can use any bot to login really
-	self.addCommand("login", {"allowpm":true, "timer":0}, function(server, channel, msg) {
+	self.addCommand("login", {"allowpm":true, "timer":0, "persist":false}, function(server, channel, msg) {
 
 		bot = self.passer;
 		if (self.attemptLogin(server, name, channel, msg)) {

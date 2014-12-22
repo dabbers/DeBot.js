@@ -26,9 +26,10 @@ Core.prototype.defaultOptions = {
 	"hidden" : false,
 	"exception": [],
 	"timer":5, // 5 seconds between command calls.
-	"persit":true,
+	"persist":true,
 	"code": function() { }
 };
+
 Core.prototype.defaultOptionsHelp = {
 	"channelbind":"(list/add/remove) Use this to lock the command to an array of channels. Can use prefix before channel for modebind (ie: @#cha*l*)",
 	"serverbind":"(list/add/remove) Use this to lock the command to an array of server aliases",
@@ -137,7 +138,7 @@ Core.prototype.randomServer = function(name) {
 
 Core.prototype.tick = function() {
 	for(var group in this.groups) {
-		this.groups[group].tick();
+		this.groups[group].emit("tick");
 	}
 }
 
@@ -160,10 +161,10 @@ Core.prototype.createLogWrapper = function(lineRef, channel) {
 		}
 	}(lineRef, channel);
 }
+Core.prototype.lines = [];
 
 // The compliment to Object.keys
 Object.values = function(obj) { return Object.keys(obj).map(function (key) { return obj[key];});}
 
 //var process = require('process');
-
 module.exports = new Core();
