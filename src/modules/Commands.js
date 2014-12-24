@@ -132,37 +132,6 @@ module.exports = new (DeBot.module(function (bot, group) {
 
 				bot.say("[Success] " + cmd + "'s option " + key + " has been updated!");
 			}
-			else if ("channelbind" == key) {
-				var action = msg.Parts[6].toLowerCase();
-				switch(action) {
-					case "list":
-						var chanbinds = group.listChanbind(cmd);
-						for(var i = 0; i < chanbinds.length; i++) {
-							bot.say((i+1) + " " + chanbinds[i]);
-						}
-					break;
-					case "add":
-						var value = msg.Parts[7].toLowerCase();
-						if (group.addChanbind(cmd, value)) {
-							bot.say("[Success] Serverbind added");
-						}
-						else {
-							bot.say("[Error] Serverbind was not added");
-						}
-					break;
-					case "remove":
-					case "delete":
-						var value = msg.Parts[7].toLowerCase();
-						if (group.removeChanbind(cmd, value)) {
-							bot.say("[Success] Chanbind removed");
-						}
-						else {
-							bot.say("[Error] Chanbind was not removed");
-						}
-					break;
-
-				}
-			}
 			else if ("serverbind" == key) {
 				var action = msg.Parts[6].toLowerCase();
 				switch(action) {
@@ -174,6 +143,8 @@ module.exports = new (DeBot.module(function (bot, group) {
 					break;
 					case "add":
 						var value = msg.Parts[7].toLowerCase();
+
+
 						if (group.addServerbind(cmd, value)) {
 							bot.say("[Success] Serverbind added");
 						}
@@ -192,11 +163,17 @@ module.exports = new (DeBot.module(function (bot, group) {
 							bot.say("[Error] Serverbind was not removed");
 						}
 					break;
+					case "help":
+
+					break;
+					default:
+							bot.say("[Error] Exception was not removed");
+					break;
 
 				}
 			}
 			else if ("exception" == key) {
-				var action = msg.Parts[6].toLowerCase();
+				var action = (msg.Parts[6] || "").toLowerCase();
 				switch(action) {
 					case "list":
 						var chanbinds = group.listException(cmd);
@@ -205,6 +182,9 @@ module.exports = new (DeBot.module(function (bot, group) {
 						}
 					break;
 					case "add":
+						// Possible exception inputs: 
+						//mode:seconds (ie: @:4), level:seconds (ie: 1:5), nick:2 (ie: nick:sec or [*!*@*]:5), and #channel:sec
+						// "exception": {"channels":[], "users":[], "chanmodes":[], "levels":[] },
 						var value = msg.Parts[7].toLowerCase();
 						if (group.addException(cmd, value)) {
 							bot.say("[Success] Serverbind added");
@@ -222,6 +202,12 @@ module.exports = new (DeBot.module(function (bot, group) {
 						else {
 							bot.say("[Error] Exception was not removed");
 						}
+					break;
+					case "help":
+
+					break;
+					default:
+							bot.say("[Error] Exception was not removed");
 					break;
 				}
 			}

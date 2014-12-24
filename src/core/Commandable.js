@@ -62,53 +62,49 @@ function Commandable() {
 		console.tmp("fce", 1);
 		var curdate = message.Timestamp.getTime();
 
-		console.log(command);
-
-		// Check for channel exceptions
-		for(var i = 0; i < command.exceptions.channels.length; i++) {
-			if (i == message.To.Parts[0]) {
+		// Check for channel timer exceptions
+		for(var i = 0; i < command.options.exceptions.channels.length; i++) {
+			if (command.options.exceptions.users[i].match == message.To.Parts[0]) {
 				timerOverridden = true;
 
-				if (curdate - command.exceptions.channels[i].time < command.options.timer) {
+				if (curdate - command.options.exceptions.channels[i].time < command.options.timer) {
 					return false;
 				}
-				command.exceptions.channels[i].time = new Date().getTime();
+				command.options.exceptions.channels[i].time = curdate;
 				break;
 			}
 		}
 		console.tmp("fce", 2);
-		// Check for channel exceptions
-		for(var i = 0; i < command.exceptions.users.length; i++) {
-			if (i.test(message.Parts[0])) {
+		// Check for user timer exceptions
+		for(var i = 0; i < command.options.exceptions.users.length; i++) {
+			if (command.options.exceptions.users[i].match.test(message.Parts[0])) {
 				timerOverridden = true;
 
-				if (new Date().getTime() - command.exceptions.users[i].time < command.options.timer) {
+				if (curdate - command.options.exceptions.users[i].time < command.options.timer) {
 					return false;
 				}
-				command.exceptions.users[i].time = new Date().getTime();
+				command.options.exceptions.users[i].time = curdate;
 				break;
 			}
 		}
 
 		var diff = curdate - command.time;
-		console.tmp("fce", 3, diff, command.options.timer);		
+		console.tmp("fce", 3, diff, command.options.timer);
 		if (command.options.timer != 0 && !timerOverridden && diff <= command.options.timer) {
-		console.tmp("fce", message.Parts[3], 1);
-		console.tmp("fce", message.Parts[4]);
-		console.tmp("fce", message.From.Parts[0]);
-		console.tmp("fce", command.options);
 			return false;
 		}
-		console.tmp("fce", 4);
+
+
 		var level = 1;
 		if (self.loggedin[server.alias] && self.loggedin[server.alias][message.From.Parts[0]]) {
 			level = self.loggedin[server.alias][message.From.Parts[0]].level;
 		}
-		console.tmp("fce", 5);
+		console.tmp("fce", 4, level, command.options.level);
 		if (command.options.level > level) {
 			return false;
 		}
-		console.tmp("fce", 6);
+
+		console.tmp("fce", 5);
 
 
 		command.time = curdate;
@@ -172,7 +168,6 @@ function Commandable() {
 			"command":string,
 			"options":options,
 			"time":0,
-			"exceptions":{"type":"blacklist", "channels":{}, "users":{}, "chanmodes":{}, },
 			"callback":fn
 		};
 	}
@@ -187,6 +182,7 @@ function Commandable() {
 		// merge user supplied options to our command
 		for(var i in options) {
 			if (options.hasOwnProperty(i) && self.commands[string].options[i]) {
+				isDirty = true;
 				self.commands[string].options[i] = options[i];
 			}
 		}
@@ -195,6 +191,7 @@ function Commandable() {
 			self.commands[string].options["timer"] *= 1000;
 
 		if (fn) {
+			isDirty = true;
 			self.commands[string].callback = fn;
 		}
 
@@ -209,25 +206,37 @@ function Commandable() {
 		}
 	}
 
-	this.addException = function(string, on, to) {
+	this.addException = function(string, type, on, seconds) {
 		var exceptionEntry = {
-			"type":"", // channel, user, chanmode
-			"time":0
+			"type":type, // channel, user, chanmode
+			"timer":seconds,
+			"time":0,
+			"match":on
 		};
+
 		string = string.toLowerCase();
+		if (!self.commands[string]) return false;
+		if (type != "channel" && type != "user" && type != "chanmode") throw "Invalid Exception type provided: " + type;
+
+		self.commands[string].options.exceptions[type].push(exceptionEntry);
 		return true;
 	}
 
 	this.listExceptions = function(string) {
+		string = string.toLowerCase();
+		if (!self.commands[string]) return null;
 
+		
 	}
 
 	this.removeException = function(string, on) {
+		string = string.toLowerCase();
 
 		return true;
 	}
 
-	this.addChanbind = function(string, on, to) {
+	this.addLocationBind = function(string, on, to) {
+		string = string.toLowerCase();
 		var exceptionEntry = {
 			"type":"", // channel, user, chanmode
 			"time":0
@@ -236,30 +245,21 @@ function Commandable() {
 		return true;
 	}
 
-	this.listChanbind = function(string) {
-
-	}
-
-	this.removeChanbind = function(string, on) {
-
-		return true;
-	}
-
-	this.addServerbind = function(string, on, to) {
-		var exceptionEntry = {
-			"type":"", // channel, user, chanmode
-			"time":0
-		};
+	this.listLocationBind = function(string) {
 		string = string.toLowerCase();
-		return true;
+		if (!self.commands[string]) return null;
+
+		//return self.commands[string].options.
 	}
 
-	this.listServerbind = function(string) {
+	this.removeLocationBind = function(string, on) {
+		string = string.toLowerCase();
+		if (isNaN(on)) {
 
-	}
+		}
+		else {
 
-	this.removeServerbind = function(string, on) {
-
+		}
 		return true;
 	}
 
