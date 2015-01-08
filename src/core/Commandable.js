@@ -133,6 +133,9 @@ function Commandable() {
 					group = self.group;
 				}
 
+				bot.lastChannel = (msg.To.Type == "Client" ? msg.From.Parts[0] : msg.To.Parts[0]);
+				bot.lastNetwork = server.alias;
+
 				self.commands[cmd].callback(server, channel, msg, bot, group);
 
 				bot.sockets[server.alias].Write(lines);
@@ -216,32 +219,46 @@ function Commandable() {
 
 		string = string.toLowerCase();
 		if (!self.commands[string]) return false;
-		if (type != "channel" && type != "user" && type != "chanmode") throw "Invalid Exception type provided: " + type;
+		if (!self.commands[string].options.exceptions[type]) throw "Invalid Exception type provided: " + type;
 
 		self.commands[string].options.exceptions[type].push(exceptionEntry);
 		return true;
 	}
 
-	this.listExceptions = function(string) {
+	this.listExceptions = function(string, type) {
 		string = string.toLowerCase();
 		if (!self.commands[string]) return null;
+		if (!self.commands[string].options.exceptions[type]) throw "Invalid Exception type provided: " + type;
 
-		
+		return self.commands[string].options.exceptions[type];
 	}
 
-	this.removeException = function(string, on) {
+	this.removeException = function(string, type, on) {
+
 		string = string.toLowerCase();
+		if (!self.commands[string]) return false;
+		if (!self.commands[string].options.exceptions[type]) throw "Invalid Exception type provided: " + type;
+
+		self.commands[string].options.exceptions[type].splice(on, 1);
 
 		return true;
 	}
 
-	this.addLocationBind = function(string, on, to) {
+	// (list/add/remove) Bind the command to server-aliases/prefix#channel. Use * for wildcard. (ie:ggxy or ggxy/#ggxy or ggxy/~#ggxy.*)",
+	this.addLocationBind = function(string, svr, channel, mode) {
 		string = string.toLowerCase();
-		var exceptionEntry = {
-			"type":"", // channel, user, chanmode
-			"time":0
+		if (!mode) mode = /./;
+		if (!channel) channel = /./;
+		if (!svr) svr = /./;
+
+		var locationBindEntry = {
+			"server": new RegExp(svr.replace(/\*/g, ".*?")),
+			"channel":new RegExp(channel.replace(/\*/g, ".*?")),
+			"mode":new RegExp(mode.replace(/\*/g, ".*?"))
 		};
-		string = string.toLowerCase();
+
+		self.commands[string].options.locationbind.push(locationBindEntry);
+
 		return true;
 	}
 
@@ -249,17 +266,14 @@ function Commandable() {
 		string = string.toLowerCase();
 		if (!self.commands[string]) return null;
 
-		//return self.commands[string].options.
+		return self.commands[string].options.locationbind;
 	}
 
 	this.removeLocationBind = function(string, on) {
 		string = string.toLowerCase();
-		if (isNaN(on)) {
+		if (!self.commands[string]) return false;
 
-		}
-		else {
-
-		}
+		self.commands[string].options.locationbind.splice(on, 1);
 		return true;
 	}
 
@@ -298,11 +312,12 @@ function Commandable() {
 	}
 
 	fs.readFile(storagePath, {"encoding":"utf8"}, function (err, data) {
+		if (undefined == data) return;
+
 		var svrs = JSON.parse(data);
-		console.log(svrs);
 		for(var i in svrs) {
 			self.commands[i] = svrs[i];
-			var newcallback = self.commands[i].callback.replace(/function\s*[A-z\-0-9]*\(\s*(server\s*,\s*channel\s*,\s*msg\s*)*\)\s*{(.*)\s*}/, "$2");
+			var newcallback = self.commands[i].callback.replace(/function\s*[A-z\-0-9]*\(\s*([^)]*)*\)\s*{((?:.+|\s*)*)\s*}/, "$2");
 			self.commands[i].callback = new Function(['server', 'channel', 'msg', 'bot', 'group'], newcallback);
 		}
 	});

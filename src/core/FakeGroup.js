@@ -2,6 +2,7 @@
 var util = require('util');
 var fakeEventsEmitter = require('./FakeEventsEmitter');
 var reflect = require('harmony-reflect');
+var fakeBot = require('./FakeBot');
 
 function fakeGroup(realGroup) {
 	this.realGroup = realGroup;
@@ -12,6 +13,7 @@ util.inherits(fakeGroup, fakeEventsEmitter);
 function createFakeGroup(realGroup) {
 	var tmpgroup = new fakeGroup(realGroup);
 	var commandsToRemove = [];
+	var callbacksToRemove = [];
 	var newbots = {};
 	var self = this;
 
@@ -25,16 +27,20 @@ function createFakeGroup(realGroup) {
 			}
 			else if ("cleanupMethods" == name) {
 				return function() {
-					tmpgroup.cleanupMethods();
+					callbacksToRemove.forEach(function(cb) { realBot.removeListener(cb.event, cb.cb); } );
 					for(var i = 0; i < commandsToRemove.length; i++) {
 						realGroup.delCommand(commandsToRemove[i]);
 					}
 				}
 			}
 			else if ("on" == name) {
-				return tmpgroup.on;
+				return function(evnt, fnc) { 
+					realGroup.on(evnt, fnc); 
+					callbacksToRemove.push({"event":evnt, "cb":fnc});
+					return fakeBot;
+				};
 			}
-			else if ("bot" == name) {
+			else if ("bots" == name) {
 				for(var i in realGroup.bots) {
 					// prevent overwriting old bots that might have callbacks created
 					if (!newbots[i])

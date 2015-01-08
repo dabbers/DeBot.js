@@ -33,7 +33,22 @@
 		// The first bot group name. Used purely for reference
 		"d*bot": {
 			"Networks": [
-				"example", "ggxy"
+				{
+					"Network":"example",
+					// Channels that all bots in this group must join. You can add password too
+					"Channels": [
+						"#channel1",
+						"#channel2 channel2pass"
+					] 
+				},
+				{
+					"Network":"ggxy",
+					// Channels that all bots in this group must join. You can add password too
+					"Channels": [
+						"#channel1",
+						"#channel2 channel2pass"
+					] 
+				},
 			],
 			 // The list of bots/connections. Must have at leat 1 bot.
 			"Bots": {
@@ -42,16 +57,15 @@
 				"DaBot":{
 					"Nick":"DaBot",
 					"Ident":"thebotidentity",
-					// Individual channel and modules this but will have
-					"Channels":["#secret password"],
+					// Individual channel and modules this but will have. Each channel is a 
+					// setting per network.
+					"Channels": {
+						"ggxy": ["#secret password"],
+						"example": ["##otherchannel"]
+					},
 					"Modules":["dtime"]
 				}
 			},
-			// Channels that all bots in this group must join. You can add password too
-			"Channels": [
-				"#channel1",
-				"#channel2 channel2pass"
-			],
 			// Modules every bot must load.
 			"Modules": ["Commands"],
 			// The prefix to the botgroup commandsd.

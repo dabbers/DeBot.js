@@ -3,7 +3,7 @@ var DeBot = require('../core/Module');
 // When loaded as a group module, bot will be null.
 module.exports = new (DeBot.module(function (bot, group) {
 	if (bot) {
-		throw "This module can only be used by a BoGroup";
+		throw "This module can only be used by a BotGroup";
 	}
 
 	var command_prefix = group.settings.CommandPrefix;
@@ -36,37 +36,28 @@ module.exports = new (DeBot.module(function (bot, group) {
 			// Attempt to validate the code without executing it.
 			try {
 				var lines = [];
-				console.log = Core.createLogWrapper(lines,  channel.Display);
-				global.echo = console.log;
-				console.tmp("CODE", code);
+				global.echo = Core.createLogWrapper(lines,  channel.Display);
 
 				new Function(code);
 
-				console.log = console.tmp;
 				bot.sockets[server.alias].Write(lines);
 			}
 			catch(ex) {
 				return bot.say("[Error] Syntax error in command: " + ex);
 			}
 
-			group.addCommand(cmd, function (botnick, cod) { 
-				var bot = group.bots[botnick];
-
-				return function(server, channel, msg) {
-					if (channel.isChannel && !group.botIsExecutor(server.alias, bot.Nick, channel.Display)) {
-						return;
-					}
+			group.addCommand(cmd, function (cod) {
+				return new Function("server", "channel", "msg", "bot", "group", "{\r\n" + 
+"					if (channel.isChannel && !group.botIsExecutor(server.alias, bot.Nick, channel.Display)) {\r\n" + 
+"						return;\r\n" +
+"					}\r\n\r\n" +
 					
-					var lines = [];
-					console.log = Core.createLogWrapper(lines,  channel.Display);
-					global.echo = console.log;
-
-					eval(cod);
-
-					console.log = console.tmp;
-					bot.sockets[server.alias].Write(lines);
-				}
-			}(bot.Nick, code));
+"					var lines = [];\r\n" + 
+"					global.echo = Core.createLogWrapper(lines,  channel.Display);\r\n\r\n" +
+					cod + "\r\n\r\n" + 
+"					bot.sockets[server.alias].Write(lines);\r\n" + 
+"				}\r\n") 
+			}(code));
 
 			bot.say("[Success] " + cmd + " has been added");
 		}
@@ -104,18 +95,12 @@ module.exports = new (DeBot.module(function (bot, group) {
 			if (!group.commands[cmd]) {
 				return bot.say("[Error] Command does not exist");
 			}
-/*
-	"channelbind" : [],
-	"serverbind" : [],
-	"exception": [],
-	*/
+
 			if ("code" == key) {
 				var code = msg.Parts.splice(6).join(" ");
 
-				group.setCommand(cmd, function (botnick) { 
-				var bot = group.bots[botnick];
-
-				return function(server, channel, msg) {
+				group.setCommand(cmd, function (cod) {
+				return function(server, channel, msg, bot, group) {
 						if (channel.isChannel && !group.botIsExecutor(server.alias, bot.Nick, channel.Display)) {
 							return;
 						}
@@ -123,7 +108,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 						console.log = Core.createLogWrapper(lines,  channel.Display);
 						global.echo = console.log;
 
-						eval(msg.Parts.splice(4).join(" "));
+						eval(code);
 
 						console.log = console.tmp;
 						bot.sockets[server.alias].Write(lines);
@@ -132,7 +117,16 @@ module.exports = new (DeBot.module(function (bot, group) {
 
 				bot.say("[Success] " + cmd + "'s option " + key + " has been updated!");
 			}
-			else if ("serverbind" == key) {
+			else if ("locationbind" == key) {
+				// ^([A-z*]+)[/]{0,1}((?<=/).*){0,1}$ matches server/mode#channel
+				/*
+				ggxy
+				* /~#dab
+				ggxy/#dab.beta
+				ggxy/~#dab.beta
+				ggxy/*#da*
+				*/
+
 				var action = msg.Parts[6].toLowerCase();
 				switch(action) {
 					case "list":

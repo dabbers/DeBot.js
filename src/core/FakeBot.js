@@ -5,13 +5,12 @@ var reflect = require('harmony-reflect');
 
 function fakeBot(realBot, fakeGrup) {
 	this.realBot = realBot;
-	fakeEventsEmitter.call(this);
 }
-util.inherits(fakeBot, fakeEventsEmitter);
 
 function createFakeBot(realBot) {
 	var tmpbot = new fakeBot(realBot);
 	var commandsToRemove = [];
+	var callbacksToRemove = [];
 
 	return Proxy(tmpbot, {
 		get:function(proxy, name) {
@@ -25,7 +24,8 @@ function createFakeBot(realBot) {
 			}
 			else if ("cleanupMethods" == name) {
 				return function() {
-					tmpbot.cleanupMethods();
+					callbacksToRemove.forEach(function(cb) { realBot.removeListener(cb.event, cb.cb); } );
+					
 					for(var i = 0; i < commandsToRemove.length; i++) {
 						realBot.delCommand(commandsToRemove[i]);
 					}
@@ -36,7 +36,11 @@ function createFakeBot(realBot) {
 				return fakeGrup;
 			}
 			else if ("on" == name) {
-				return tmpbot.on;
+				return function(evnt, fnc) { 
+					realBot.on(evnt, fnc); 
+					callbacksToRemove.push({"event":evnt, "cb":fnc});
+					return fakeBot;
+				};
 			}
 			else {
 				return realBot[name];

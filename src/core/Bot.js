@@ -29,12 +29,25 @@ function Bot(nick, group, settings) {
 
 	moduleHandler(this);
 
-	// We want to set our last net/chan stuff before the commandable interface
-	// tries making calls out. So we register our onPrivmsg first.
-	this.on('OnPrivmsg', function(serv, msg) {
-		self.lastChannel = (msg.To.Type == "Client" ? msg.From.Parts[0] : msg.To.Parts[0]);
+
+	var lastChannelUpdate = function(serv, msg) {
+		// If the destination is client, it is us meaning a PM. Use that as the reply instead of own bot.
+		self.lastChannel = (msg.To ? (msg.To.Type == "Client" ? msg.From.Parts[0] : msg.To.Parts[0]) : msg.Parts[2]);
+	}
+
+	var lastNetworkUpdate = function(serv, msg) {
 		self.lastNetwork = serv.alias;
-	});
+	}
+
+	// To let the scriptor have an easier time sending a message to the corresponding 
+	// network/channel, 
+	this.on('OnRawMessage', lastNetworkUpdate );
+
+	this.on('OnJoin',       lastChannelUpdate );
+	this.on('OnPart',       lastChannelUpdate );
+	this.on('OnKick',       lastChannelUpdate );
+	this.on('OnModeChange', lastChannelUpdate );
+	this.on('OnInvite',     lastChannelUpdate );
 
 	commandable.call(this);
 
@@ -54,10 +67,19 @@ function Bot(nick, group, settings) {
 	this.Ident = usableSettings.Ident;
 	this.Name = Core.config.OwnerNicks + "'s bot";
 
+	for(var modIdx = 0; modIdx < usableSettings.Modules.length; modIdx++) {
+		this.loadModule(usableSettings.Modules[modIdx]);
+	}
 
 	this.on("OnConnectionEstablished", function(server, msg) {
 		for(var chan in usableSettings.Channels) {
 			self.sockets[server.alias].Write("JOIN " + usableSettings.Channels[chan]);
+		}
+	});
+
+	this.on("OnQueryCtcp", function(server, msg) {
+		if (msg.Parts[3] == ":\001VERSION") {
+			this.ctcp(msg.From.Parts[0], "VERSION", "NOTICE", "DeBot.js v0.4.5");
 		}
 	});
 
@@ -126,13 +148,12 @@ function Bot(nick, group, settings) {
 				net = self.lastNetwork;
 			}
 		}
-		self.sockets[net].Write("NOTICE " + chan + " :" + msg);
+		self.raw(net, "NOTICE " + chan + " :" + msg);
 	}
 
 	/*
-	 * Either .say(message)
-	 * Or     .say(channel, msg)
-	 * or     .say(network, channel, msg)
+	 * Either .raw(message)
+	 * or     .raw(network, msg)
 	 */
 	this.raw = function(net, msg) {
 		if (!msg) {
@@ -157,7 +178,24 @@ function Bot(nick, group, settings) {
 			}
 		}
 
-		self.say(net, chan, "\001ACTION " + msg + "\001");
+		self.ctcp(net, chan, "PRIVMSG", "ACTION", msg);
+	}
+
+	this.action = this.me;
+
+	/*
+	 * All parameters are required and cannot be assumed, minus network
+	 */
+	this.ctcp = function(net, destination, action, command, text) {
+		if (!text) {
+			text = command;
+			command = action;
+			action = destination;
+			destination = net;
+			net = self.lastNetwork;
+		}
+
+		self.raw(net, action + " " + destination + " :\001" + command + " " + text + "\001");
 	}
 
 	/*
@@ -182,7 +220,7 @@ function Bot(nick, group, settings) {
 			}
 		}
 
-		self.sockets[net].Write("JOIN " + chan + " " + pass);
+		self.raw(net, "JOIN " + chan + " " + pass);
 	}
 
 	/*
@@ -206,7 +244,7 @@ function Bot(nick, group, settings) {
 				net = self.lastNetwork;
 			}
 		}
-		self.sockets[net].Write("PART " + chan + " :" + reason);
+		self.raw(net, "PART " + chan + " :" + reason);
 	}
 }
 util.inherits(Bot, 			  irc.User);

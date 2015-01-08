@@ -12,7 +12,7 @@ function ModuleHandler (obj) {
 	obj.loadModule = function(modname) {
 		//try {
 			var modpath = Core.relativeToAbsolute('modules/'+ modname);
-			if (require.cache[modpath]) delete require.cache[modpath];
+			if (require.cache[modpath + ".js"]) delete require.cache[modpath + ".js"];
 
 			var module1 = require(modpath);
 			obj.modules[modname] = module1;

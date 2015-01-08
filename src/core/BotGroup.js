@@ -43,19 +43,27 @@ function BotGroup(name, settings) {
 			this.bots[botOrName.alias] = botOrName;
 
 			if (loaded) {
+
 				botOrName.on("OnConnectionEstablished", function(server, msg) {
-					for(var chan in self.settings.Channels) {
-						botOrName.sockets[server.alias].Write("JOIN " + settings.Channels[chan]);
+					for(var networkIndex = 0; networkIndex < settings.Networks.length; networkIndex++) {
+						console.log(server.alias, settings.Networks[networkIndex].Network);
+						if (settings.Networks[networkIndex].Network == server.alias) {
+
+							for(var chanIdx = 0; chanIdx < settings.Networks[networkIndex].Channels.length; chanIdx++) {
+								botOrName.sockets[server.alias].Write("JOIN " + settings.Networks[networkIndex].Channels[chan]);
+							}
+							break;
+						}
 					}
 				});
+
 				botOrName.on("OnPrivmsg", function(server, msg) {
 					self.emit("OnPrivmsg", server, msg, botOrName);
 				});
 
-				for(var networkName in settings.Networks) {
-
-					botOrName.connect(settings.Networks[networkName], Core.randomServer(settings.Networks[networkName]));
-					this.networks[settings.Networks[networkName]].PerformConnect(botOrName);
+				for(var networkIndex = 0; networkIndex < settings.Networks.length; networkIndex++) {
+					botOrName.connect(settings.Networks[networkIndex].Network, Core.randomServer(settings.Networks[networkIndex].Network));
+					self.networks[settings.Networks[networkIndex].Network].PerformConnect(botOrName);
 				}
 			}
 		}
@@ -103,8 +111,15 @@ function BotGroup(name, settings) {
 			self.bots[botKey].on("OnConnectionEstablished", function (bot) {
 				bot = self.bots[bot];
 				return function(server, msg) {
-					for(var chan in self.settings.Channels) {
-						bot.sockets[server.alias].Write("JOIN " + settings.Channels[chan]);
+					for(var networkIndex = 0; networkIndex < settings.Networks.length; networkIndex++) {
+
+						if (settings.Networks[networkIndex].Network == server.alias) {
+
+							for(var chanIdx = 0; chanIdx < settings.Networks[networkIndex].Channels.length; chanIdx++) {
+								bot.sockets[server.alias].Write("JOIN " + settings.Networks[networkIndex].Channels[chanIdx]);
+							}
+							break;
+						}
 					}
 				}
 			}(botKey));
@@ -116,7 +131,7 @@ function BotGroup(name, settings) {
 		}
 		
 		for(var network in settings.Networks) {
-			self.addNetwork(settings.Networks[network]);
+			self.addNetwork(settings.Networks[network].Network);
 		}
 		for(var i in settings.Modules) {
 			self.loadModule(settings.Modules[i]);
@@ -152,7 +167,7 @@ function BotGroup(name, settings) {
 		var firstbot = botkeys[0];
 
 		while(
-			!self.networks[serverAlias].nickIsInChannel(self.bots[firstbot].Hosts[serverAlias].Nick, channel) 
+			!self.networks[serverAlias].nickIsInChannel(self.bots[firstbot].Hosts[serverAlias].Nick, channel.Display) 
 			&& indx + 1 < Object.keys(self.bots).length
 		) {
 			firstbot = Object.keys(self.bots)[++indx];
@@ -185,7 +200,7 @@ function BotGroup(name, settings) {
 		bot = self.passer;
 		var group = self; // alias/shortcut
 
-		if (!self.botIsExecutor(server.alias, bot.Nick, channel.Display)) {
+		if (!self.botIsExecutor(server.alias, bot.Nick, channel)) {
 			//channel = server.Channels[msg.Parts[2]];
 			return;
 		}
@@ -222,19 +237,45 @@ function BotGroup(name, settings) {
 		if (!pass) {
 
 			// verify if net is actually a network
-			if (!self.sockets[net]) {
+			if (!self.networks[net]) {
 				// net is a channel. Check if password provided
 				if (chan) {
 					pass = chan;
 				}
 				chan = net;
-				net = lastnet;
+				net = self.passer.lastNetwork;
 			}
 		}
 
 		for(var bot in self.bots) {
-			self.bots[bot].sockets[net].Write("JOIN " + chan + " " + pass);
+			self.bots[bot].join(net, chan, pass);
 		}
+	}
+
+
+	/*
+	 * Mass part all bots, and remove from config a channel.
+	 * Either .part(channel)
+	 * Or 	  .part(channel, reason)
+	 * Or 	  .part(net, channel)
+	 * Or 	  .part(net, channel, reason)
+	 */
+	this.part = function(net, chan, reason) {
+		// Check if reason provided because that means the other 2 aren't what they
+		// are supposed to be if no reason is provided
+		if (!reason) {
+
+			// verify if net is actually a network
+			if (!self.sockets[net]) {
+				// net is a channel. Check if password provided
+				if (chan) {
+					reason = chan;
+				}
+				chan = net;
+				net = self.lastNetwork;
+			}
+		}
+		self.raw(net, "PART " + chan + " :" + reason);
 	}
 
 
