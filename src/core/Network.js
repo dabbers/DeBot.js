@@ -79,7 +79,6 @@ function Network(group, ctx, name) {
         botcopy.Hosts[name] = {"Nick": bot.Nick,"Ident": bot.Ident,"Host": bot.Host,    };
 
         botcopy.on('OnNickChange', function(svr, msg) {
-            console.log("NICK CHANGE", JSON.stringify(msg.Who));
             botcopy.Hosts[name].Nick = botcopy.Nick; // Update even if the bot isn't the one doing the /nick
         });
 
@@ -113,6 +112,12 @@ function Network(group, ctx, name) {
             botcopy.sockets[name].Write("WHOIS " + botcopy.Nick);
             //whoisLibraryRequested.push(botcopy.Nick);
 
+            botcopy.sockets[name].Write("MODE " + botcopy.Nick + " +B");
+            botcopy.removeListener("433", nick_in_use);
+            attempts = 0;
+        });
+
+        botcopy.on('005', function (svr, msg) {
             if (self.Attributes["NAMESX"]) {
                 multiModes = true;
                 botcopy.sockets[name].Write("PROTOCTL NAMESX");
@@ -121,9 +126,6 @@ function Network(group, ctx, name) {
                 hostInNames = true;
                 botcopy.sockets[name].Write("PROTOCTL UHNAMES");
             }
-            botcopy.sockets[name].Write("MODE " + botcopy.Nick + " +B");
-            botcopy.removeListener("433", nick_in_use);
-            attempts = 0;
         });
 
         botcopy.on('OnWhois', function(svr, msg) { 

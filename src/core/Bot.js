@@ -71,22 +71,61 @@ function Bot(nick, group, settings) {
 		this.loadModule(usableSettings.Modules[modIdx]);
 	}
 
-	this.on("OnConnectionEstablished", function(server, msg) {
-		for(var chan in usableSettings.Channels) {
-			self.sockets[server.alias].Write("JOIN " + usableSettings.Channels[chan]);
+	this.on("OnConnectionEstablished", function (server, msg) {
+		for(var chan in usableSettings.Channels[server.alias]) {
+			self.sockets[server.alias].Write("JOIN " + usableSettings.Channels[server.alias][chan]);
 		}
 	});
 
-	this.on("OnQueryCtcp", function(server, msg) {
+	this.on("OnQueryCtcp", function (server, msg) {
 		if (msg.Parts[3] == ":\001VERSION") {
-			this.ctcp(msg.From.Parts[0], "VERSION", "NOTICE", "DeBot.js v0.4.5");
+			this.ctcp(msg.From.Parts[0], "NOTICE", "VERSION", "DeBot.js v" + Core.version);
 		}
 	});
+
+	this.on("OnNewChannelJoin", function (server, msg) {
+		// Is this channel already a channel the bot is trying to join?
+		console.log(self.alias, msg, usableSettings);
+		if (usableSettings.Channels[server.alias] && usableSettings.Channels[server.alias].filter(function (ch) { console.log("dis", ch); return ch == msg.Channel; }).length != 0 ) {
+			return;
+		}
+
+		// If this was group requested, it would be saved in the settings before being dispursed to all the bots.
+		var groupNetworkSetting = group.settings.Networks.filter(function (net) { return net.Network == server.alias; });
+		console.log(groupNetworkSetting);
+		if (groupNetworkSetting.length !=0 && groupNetworkSetting[0].Channels.filter(function (ch) { return ch == msg.Channel; }).length != 0) {
+			return;
+		}
+
+		// It isn't a channel already joined, and isn't a channel being synced by the group, add it to our config.
+		//Core.config.BotGroups[group.alias].Bots[self.alias].Channels[server.alias].push(msg.Channel); // phew.. mouthy.
+		/// Not sure if the auto-save function will work with the above ^
+		usableSettings.Channels[server.alias].push(msg.Channel);
+		Core.config.save();
+	});
+
+
+	this.on("OnPart", function (server, msg) {
+		if (msg.From.Parts[0] != self.Nick) {
+			return;
+		}
+
+		for(var i = 0; i < usableSettings.Channels[server.alias].length; i++) {
+			if (usableSettings.Channels[server.alias][i] == msg.Parts[2]) {
+				Core.config.BotGroups[group.alias].Bots[self.alias].Channels[server.alias].splice(i,1);
+				Core.config.save();
+			}
+		}
+	});
+
 
 	// NEVER call this function yourself. Use BotGroup's addNetwork function.
 	this.connect = function(name, connectInfo) {
 		if (!name) throw "Name is required (first param)";
 		if (!connectInfo || !connectInfo.host) throw "connectInfo object is required. Keys: host (required), port (6667 default), ssl (false default)";
+
+		// New network and/or new bot instance not yet saved to the config
+		if (usableSettings.Channels[name]) usableSettings.Channels[name] = [];
 
 		self.sockets[name] = Core.context.CreateConnection(
 			"Direct", 
@@ -105,7 +144,7 @@ function Bot(nick, group, settings) {
 	}
 
 	this.settings = function() {
-		return settings;
+		return usableSettings;
 	}
 
 	/*
@@ -244,7 +283,8 @@ function Bot(nick, group, settings) {
 				net = self.lastNetwork;
 			}
 		}
-		self.raw(net, "PART " + chan + " :" + reason);
+
+		self.raw(net, "PART " + chan + " :" + (reason|| "") );
 	}
 }
 util.inherits(Bot, 			  irc.User);

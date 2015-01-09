@@ -4,7 +4,7 @@ global.die = function() {
 	for(var gr in global.Core.groups) {
 		for(var b in global.Core.groups[gr].bots) {
 			for( var n in global.Core.groups[gr].bots[b].sockets) {
-				global.Core.groups[gr].bots[b].disconnect(n, "DeBot.js Framework v.1");
+				global.Core.groups[gr].bots[b].disconnect(n, "DeBot.js Framework v" + Core.version);
 			}
 		}
 	}

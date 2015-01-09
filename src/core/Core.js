@@ -15,9 +15,9 @@ Core.prototype.bots = [];
 Core.prototype.groups = {};
 Core.prototype.settings = {};
 Core.prototype.config = undefined; 
-
-Core.prototype.defaultGroupSetting = {"Networks":[], "Bots":{}, "Channels":[], "Modules":[], "CommandPrefix":"!"};
-Core.prototype.defaultBotSetting = {"Ident":"dbt", "Networks":[], "Bots":{}, "Channels":[], "Modules":[]};
+Core.prototype.version = "0.4.6";
+Core.prototype.defaultGroupSetting = {"Networks":[], "Bots":{}, "Modules":[], "CommandPrefix":"!"};
+Core.prototype.defaultBotSetting = {"Ident":"dbt", "Channels":{}, "Modules":[]};
 Core.prototype.defaultOptions = {
 	"locationbinds" : [],
 	"level" : 1,
@@ -68,8 +68,7 @@ Core.prototype.createBot = function(botName, groupName, settings) {
 		if ("string" == typeof groupName) {
 			settings = this.defaultBotSetting;
 		}
-		else
-		{
+		else {
 			settings = groupName || JSON.parse(JSON.stringify(this.defaultBotSetting));
 			groupName = botName;
 		}

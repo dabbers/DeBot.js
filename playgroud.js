@@ -1,23 +1,28 @@
 var Watchable = require( "overload" ).Watchable;
 var Reflect = require('harmony-reflect');
 
-var config = {
-	"a":"b",
-	"c":["a","b","c"]
+var a = {
+	"group": { 
+		"bot": { 
+			"a": {
+				"Channel": ["a","b","c"]
+			}
+		}
+	}
 };
 
-var obj = new Proxy(config, {
-    set: function( proxy, property, value ) {
-    	console.log(proxy);
-    }
-});
 
-console.log(obj);
-obj.a = "abc";
-obj.c.push("hi");
-
-console.log();
-
-console.log (obj);
+function omg(chns) {
+	chns.push("e");
+	this.ShowChns = function() {
+		console.log(chns);
+	}
+}
 
 
+var o = new omg(a.group.bot.a.Channel);
+console.log(a);
+o.ShowChns();
+a.group.bot.a.Channel.push("d");
+o.ShowChns();
+console.log(a.group.bot.a.Channel);

@@ -1,4 +1,4 @@
-var DeBot = require('./Module');
+var DeBot = require('../core/Module');
 module.exports = new (DeBot.module(function (bot) {
-	bot.on("hi", function() { console.log("Hello from module2");});
+	bot.on("OnNewChannelJoin", function(svr, msg) { console.log(bot.alias, msg);});
 }))();

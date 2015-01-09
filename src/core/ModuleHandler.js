@@ -10,6 +10,9 @@ function ModuleHandler (obj) {
 	obj.modules = {};
 
 	obj.loadModule = function(modname) {
+
+		if (obj.modules[modname]) obj.unloadModule(modname);
+		
 		//try {
 			var modpath = Core.relativeToAbsolute('modules/'+ modname);
 			if (require.cache[modpath + ".js"]) delete require.cache[modpath + ".js"];
@@ -22,7 +25,7 @@ function ModuleHandler (obj) {
 		//	throw "Failed to laod module " + modpath + ". " + ex;
 		//}
 
-		return obj.modules[modname];
+		return obj;
 	}
 
 	obj.unloadModule = function(modname) {
@@ -30,6 +33,7 @@ function ModuleHandler (obj) {
 			obj.modules[modname].uninit();
 			delete obj.modules[modname];
 		}
+		return obj;
 	}
 }
 

@@ -43,6 +43,10 @@ function BotGroup(name, settings) {
 			this.bots[botOrName.alias] = botOrName;
 
 			if (loaded) {
+				// This case happens when we add a bot AFTER everything is loaded. 
+				// This means we added a bot manually, so we need to save the bot into the settings.
+				Core.config.BotGroups[self.alias].Bots[botOrName.alias] = botOrName.settings();
+				Core.config.save();
 
 				botOrName.on("OnConnectionEstablished", function(server, msg) {
 					for(var networkIndex = 0; networkIndex < settings.Networks.length; networkIndex++) {
@@ -50,7 +54,7 @@ function BotGroup(name, settings) {
 						if (settings.Networks[networkIndex].Network == server.alias) {
 
 							for(var chanIdx = 0; chanIdx < settings.Networks[networkIndex].Channels.length; chanIdx++) {
-								botOrName.sockets[server.alias].Write("JOIN " + settings.Networks[networkIndex].Channels[chan]);
+								botOrName.sockets[server.alias].Write("JOIN " + settings.Networks[networkIndex].Channels[chanIdx]);
 							}
 							break;
 						}
@@ -75,6 +79,14 @@ function BotGroup(name, settings) {
 		if (botOrName instanceof Bot) {
 			botOrName = botOrName.alias;
 		}
+
+		delete Core.config.BotGroups[self.alias].Bots[botOrName.alias];
+		Core.config.save();
+
+		for(var networkIndex = 0; networkIndex < settings.Networks.length; networkIndex++) {
+			self.bots[botOrName].disconnect(settings.Networks[networkIndex].Network, "DeBot.js Framework v" + Core.version);
+		}
+
 		delete self.bots[botOrName];
 	}
 
@@ -247,6 +259,22 @@ function BotGroup(name, settings) {
 			}
 		}
 
+		var netz = settings.Networks.filter(function (n) { return n.Network == net;});
+		console.log(netz);
+		if (netz.length != 0 && netz[0].Channels.filter(function (c) { return c == chan; }).length == 0) {
+			for(var i = 0; i < Core.config.BotGroups[self.alias].Networks.length; i++) {
+				if (Core.config.BotGroups[self.alias].Networks[i].Network == net) {
+					Core.config.BotGroups[self.alias].Networks[i].Channels.push(chan);
+					Core.config.save();
+					break;
+				}
+			}
+			// It isn't a channel already joined, and isn't a channel being synced by the group, add it to our config.
+			//Core.config.BotGroups[self.alias].Bots[self.alias].Channels[server.alias].push(msg.Channel); // phew.. mouthy.
+			
+		}
+
+
 		for(var bot in self.bots) {
 			self.bots[bot].join(net, chan, pass);
 		}
@@ -275,7 +303,27 @@ function BotGroup(name, settings) {
 				net = self.lastNetwork;
 			}
 		}
-		self.raw(net, "PART " + chan + " :" + reason);
+
+		var netz = settings.Networks.filter(function (n) { return n.Network == net;});
+
+		if (netz.length != 0 && netz[0].Channels.filter(function (c) { return c == chan; }).length == 0) {
+			for(var i = 0; i < Core.config.BotGroups[self.alias].Networks.length; i++) {
+				if (Core.config.BotGroups[self.alias].Networks[i].Network == net) {
+					for(var j = 0; j < Core.config.BotGroups[self.alias].Networks[i].Channels.length; j++) {
+						if (Core.config.BotGroups[self.alias].Networks[i].Channels[j] == chan) {
+							Core.config.BotGroups[self.alias].Networks[i].Channels.split(j, 1);
+							Core.config.save();
+							break;
+						}
+
+					}
+
+					break;
+				}
+			}			
+		}
+
+		self.raw(net, "PART " + chan + " :" + (reason || ""));
 	}
 
 
