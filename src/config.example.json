@@ -43,7 +43,6 @@
 				},
 				{
 					"Network":"ggxy",
-					// Channels that all bots in this group must join. You can add password too
 					"Channels": [
 						"#channel1",
 						"#channel2 channel2pass"

@@ -184,9 +184,14 @@ function Commandable() {
 
 		// merge user supplied options to our command
 		for(var i in options) {
-			if (options.hasOwnProperty(i) && self.commands[string].options[i]) {
-				isDirty = true;
-				self.commands[string].options[i] = options[i];
+			if (options.hasOwnProperty(i)) {
+				if (self.commands[string].options[i]) {
+					isDirty = true;
+					self.commands[string].options[i] = options[i];
+				}
+				else {
+					return false;
+				}
 			}
 		}
 
@@ -199,6 +204,7 @@ function Commandable() {
 		}
 
 		self.commands[string].time = 0;
+		return true;
 	}
 
 	this.delCommand = function(string) {

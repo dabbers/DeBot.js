@@ -63,7 +63,7 @@ function Bot(nick, group, settings) {
 	var usableSettings = (settings || group);
 
 	this.Nick = usableSettings.Nick;
-	this.Hosts = {};
+	this.Hosts = {}; // Nick, Ident, Host for each network.
 	this.Ident = usableSettings.Ident;
 	this.Name = Core.config.OwnerNicks + "'s bot";
 
@@ -98,7 +98,6 @@ function Bot(nick, group, settings) {
 		}
 
 		// It isn't a channel already joined, and isn't a channel being synced by the group, add it to our config.
-		//Core.config.BotGroups[group.alias].Bots[self.alias].Channels[server.alias].push(msg.Channel); // phew.. mouthy.
 		/// Not sure if the auto-save function will work with the above ^
 		usableSettings.Channels[server.alias].push(msg.Channel);
 		Core.config.save();

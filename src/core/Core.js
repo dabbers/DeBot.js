@@ -3,6 +3,7 @@ var Bot = require('./Bot');
 var Config = require('./Config');
 var path = require('path');
 var contx = require('./NodeContext');
+var pjson = require('./package.json');
 
 console.tmp = console.log;
 
@@ -15,7 +16,7 @@ Core.prototype.bots = [];
 Core.prototype.groups = {};
 Core.prototype.settings = {};
 Core.prototype.config = undefined; 
-Core.prototype.version = "0.4.6";
+Core.prototype.version = pjson.version;
 Core.prototype.defaultGroupSetting = {"Networks":[], "Bots":{}, "Modules":[], "CommandPrefix":"!"};
 Core.prototype.defaultBotSetting = {"Ident":"dbt", "Channels":{}, "Modules":[]};
 Core.prototype.defaultOptions = {
@@ -38,7 +39,7 @@ Core.prototype.defaultOptionsHelp = {
 	"timer":"The timer throttle for the command between each command",
 	"persit":"If this command should be written to file so it can be reloaded upon bot load",
 	"code":"The code to execute on command call"
-}
+};
 
 Core.prototype.addGroup = function(groupName, settings) {
 	for(var key in this.defaultGroupSetting) {

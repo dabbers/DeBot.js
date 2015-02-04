@@ -36,6 +36,7 @@ function BotGroup(name, settings) {
 		// createBot will call this function again once the bot is created.
 		// We don't need to add the bot if we aren't passed one yet.
 		if (!(botOrName instanceof Bot)) {
+			if (self.bots[botOrName]) return false;
 			botOrName = Core.createBot(botOrName, this.name, options);
 		}
 		else
@@ -109,7 +110,7 @@ function BotGroup(name, settings) {
 	}
 
 	this.delNetwork = function(networkOrName) {
-
+		
 	}
 	
 	var command_prefix = settings.CommandPrefix;
@@ -178,11 +179,12 @@ function BotGroup(name, settings) {
 		var botkeys = Object.keys(self.bots);
 		var firstbot = botkeys[0];
 
+		// Loop while not in the channel, and we've not reached the last item (without going past it)
 		while(
 			!self.networks[serverAlias].nickIsInChannel(self.bots[firstbot].Hosts[serverAlias].Nick, channel.Display) 
-			&& indx + 1 < Object.keys(self.bots).length
+			&& indx + 1 < botkeys.length
 		) {
-			firstbot = Object.keys(self.bots)[++indx];
+			firstbot = botkeys[++indx];
 		}
 		
 		bot.lastNetwork = serverAlias;
@@ -194,9 +196,8 @@ function BotGroup(name, settings) {
 	/*
 	 * Determines if this bot can execute in this environment. 
 	 */
-	this.botIsExecutor = function(serverAlias, botNick, channel) {
-
-		return botNick == self.getBotExecutor(serverAlias, botNick, channel).Hosts[serverAlias].Nick;
+	this.botIsExecutor = function(serverAlias, botAlias, channel) {
+		return botAlias == self.getBotExecutor(serverAlias, botAlias, channel).Hosts[serverAlias].alias;
 	}
 
 
@@ -212,7 +213,7 @@ function BotGroup(name, settings) {
 		bot = self.passer;
 		var group = self; // alias/shortcut
 
-		if (!self.botIsExecutor(server.alias, bot.Nick, channel)) {
+		if (!self.botIsExecutor(server.alias, bot.alias, channel)) {
 			//channel = server.Channels[msg.Parts[2]];
 			return;
 		}
@@ -259,6 +260,8 @@ function BotGroup(name, settings) {
 			}
 		}
 
+
+		// Todo: Clean this up, less loops maybe?
 		var netz = settings.Networks.filter(function (n) { return n.Network == net;});
 		console.log(netz);
 		if (netz.length != 0 && netz[0].Channels.filter(function (c) { return c == chan; }).length == 0) {
@@ -269,8 +272,6 @@ function BotGroup(name, settings) {
 					break;
 				}
 			}
-			// It isn't a channel already joined, and isn't a channel being synced by the group, add it to our config.
-			//Core.config.BotGroups[self.alias].Bots[self.alias].Channels[server.alias].push(msg.Channel); // phew.. mouthy.
 			
 		}
 
@@ -304,8 +305,9 @@ function BotGroup(name, settings) {
 			}
 		}
 
-		var netz = settings.Networks.filter(function (n) { return n.Network == net;});
 
+		// Todo: Clean this up, less loops maybe?
+		var netz = settings.Networks.filter(function (n) { return n.Network == net;});
 		if (netz.length != 0 && netz[0].Channels.filter(function (c) { return c == chan; }).length == 0) {
 			for(var i = 0; i < Core.config.BotGroups[self.alias].Networks.length; i++) {
 				if (Core.config.BotGroups[self.alias].Networks[i].Network == net) {

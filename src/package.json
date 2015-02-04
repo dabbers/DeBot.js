@@ -1,6 +1,6 @@
 {
   "name": "DeBot.js",
-  "version": "0.0.0",
+  "version": "0.4.6",
   "description": "A javascript IRC Bot designed for easy API use, and powerful flexability.",
   "main": "index.js",
   "dependencies": {

@@ -15,7 +15,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 		function(server, channel, msg) {
 			bot = group.passer;
 
-			if (channel.isChannel && !group.botIsExecutor(server.alias, bot.Nick, channel.Display)) {
+			if (channel.isChannel && !group.botIsExecutor(server.alias, bot.alias, channel)) {
 				return;
 			}
 
@@ -69,7 +69,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 		function(server, channel, msg) {
 			bot = group.passer;
 
-			if (channel.isChannel && !group.botIsExecutor(server.alias, bot.Nick, channel.Display)) {
+			if (channel.isChannel && !group.botIsExecutor(server.alias, bot.alias, channel)) {
 				return;
 			}
 
@@ -99,23 +99,23 @@ module.exports = new (DeBot.module(function (bot, group) {
 			if ("code" == key) {
 				var code = msg.Parts.splice(6).join(" ");
 
-				group.setCommand(cmd, function (cod) {
-				return function(server, channel, msg, bot, group) {
-						if (channel.isChannel && !group.botIsExecutor(server.alias, bot.Nick, channel.Display)) {
-							return;
-						}
-						var lines = [];
-						console.log = Core.createLogWrapper(lines,  channel.Display);
-						global.echo = console.log;
+				try {
+					var fnc = new Function("server", "channel", "msg", "bot", "group", "{\r\n" + 
+"					if (channel.isChannel && !group.botIsExecutor(server.alias, bot.Nick, channel.Display)) {\r\n" + 
+"						return;\r\n" +
+"					}\r\n\r\n" +
+					
+"					var lines = [];\r\n" + 
+"					global.echo = Core.createLogWrapper(lines,  channel.Display);\r\n\r\n" +
+					cod + "\r\n\r\n" + 
+"					bot.sockets[server.alias].Write(lines);\r\n" + 
+"				}\r\n");
+					group.setCommand(cmd, );
 
-						eval(code);
-
-						console.log = console.tmp;
-						bot.sockets[server.alias].Write(lines);
-					}
-				}(bot.Nick));
-
-				bot.say("[Success] " + cmd + "'s option " + key + " has been updated!");
+					bot.say("[Success] " + cmd + "'s option " + key + " has been updated!");
+				} catch( ex) {
+					return bot.say("[Error] Command does not exist");
+				}
 			}
 			else if ("locationbind" == key) {
 				// ^([A-z*]+)[/]{0,1}((?<=/).*){0,1}$ matches server/mode#channel
@@ -132,7 +132,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 					case "list":
 						var chanbinds = group.listServerbind(cmd);
 						for(var i = 0; i < chanbinds.length; i++) {
-							bot.say((i+1) + " " + chanbinds[i]);
+							bot.say((i) + " " + chanbinds[i]);
 						}
 					break;
 					case "add":
@@ -158,7 +158,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 						}
 					break;
 					case "help":
-
+						bot.say("[Error] Exception was not removed");
 					break;
 					default:
 							bot.say("[Error] Exception was not removed");
@@ -198,19 +198,20 @@ module.exports = new (DeBot.module(function (bot, group) {
 						}
 					break;
 					case "help":
-
+						bot.say("Use add to add an exception. Remove to remove an exception. List to view current exceptions.");
 					break;
 					default:
-							bot.say("[Error] Exception was not removed");
+						bot.say("[Error] Exception was not removed");
 					break;
 				}
 			}
 			else {
 				var opt = {};
 				opt[key] = msg.Parts[6];
-				group.setCommand(cmd, opt);
-
-				bot.say("[Success] " + cmd + "'s option " + key + " has been updated!");
+				if (group.setCommand(cmd, opt))
+					bot.say("[Success] " + cmd + "'s option " + key + " has been updated!");
+				else
+					bot.say("[Error] " + cmd + "'s option " + key + " was not update");
 			}
 
 		}
@@ -221,7 +222,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 		function(server, channel, msg) {
 			bot = group.passer;
 
-			if (channel.isChannel && !group.botIsExecutor(server.alias, bot.Nick, channel.Display)) {
+			if (channel.isChannel && !group.botIsExecutor(server.alias, bot.alias, channel)) {
 				return;
 			}
 
@@ -247,7 +248,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 		function(server, channel, msg) {
 			bot = group.passer;
 
-			if (channel.isChannel && !group.botIsExecutor(server.alias, bot.Nick, channel.Display)) {
+			if (channel.isChannel && !group.botIsExecutor(server.alias, bot.alias, channel)) {
 				return;
 			}
 
