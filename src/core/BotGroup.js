@@ -184,11 +184,12 @@ function BotGroup(name, settings) {
 			!self.networks[serverAlias].nickIsInChannel(self.bots[firstbot].Hosts[serverAlias].Nick, channel.Display) 
 			&& indx + 1 < botkeys.length
 		) {
+			self.bots[firstbot].lastNetwork = serverAlias;
 			firstbot = botkeys[++indx];
 		}
 		
-		bot.lastNetwork = serverAlias;
-		bot.lastChannel = channel.Display;
+		self.bots[firstbot].lastNetwork = serverAlias;
+		self.bots[firstbot].lastChannel = channel.Display;
 
 		return self.bots[firstbot];
 	}
@@ -197,7 +198,7 @@ function BotGroup(name, settings) {
 	 * Determines if this bot can execute in this environment. 
 	 */
 	this.botIsExecutor = function(serverAlias, botAlias, channel) {
-		return botAlias == self.getBotExecutor(serverAlias, botAlias, channel).Hosts[serverAlias].alias;
+		return botAlias == self.getBotExecutor(serverAlias, botAlias, channel).alias;
 	}
 
 
@@ -218,8 +219,9 @@ function BotGroup(name, settings) {
 			return;
 		}
 
+		var msgCopy = JSON.parse(JSON.stringify(msg));
 
-		eval(msg.Parts.splice(4).join(" "));
+		eval(msgCopy.Parts.splice(4).join(" "));
 	});
 
 	// a handy clear buffer command in case you start spamming the channel.

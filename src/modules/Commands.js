@@ -18,9 +18,10 @@ module.exports = new (DeBot.module(function (bot, group) {
 			if (channel.isChannel && !group.botIsExecutor(server.alias, bot.alias, channel)) {
 				return;
 			}
+			var msgCopy = JSON.parse(JSON.stringify(msg));
 
 			var cmd = (msg.Parts[4] || "").toLowerCase();
-			var code = msg.Parts.splice(5).join(" ");
+			var code = msgCopy.Parts.splice(5).join(" ");
 
 			if (!cmd) {
 				return bot.say("[Error] Please specify a command, or help");
@@ -48,12 +49,12 @@ module.exports = new (DeBot.module(function (bot, group) {
 
 			group.addCommand(cmd, function (cod) {
 				return new Function("server", "channel", "msg", "bot", "group", "{\r\n" + 
-"					if (channel.isChannel && !group.botIsExecutor(server.alias, bot.Nick, channel.Display)) {\r\n" + 
+"					if (!group.botIsExecutor(server.alias, bot.Nick, channel)) {\r\n" + 
 "						return;\r\n" +
 "					}\r\n\r\n" +
 					
 "					var lines = [];\r\n" + 
-"					global.echo = Core.createLogWrapper(lines,  channel.Display);\r\n\r\n" +
+"					global.echo = Core.createLogWrapper(lines, channel.Display);\r\n\r\n" +
 					cod + "\r\n\r\n" + 
 "					bot.sockets[server.alias].Write(lines);\r\n" + 
 "				}\r\n") 
@@ -93,28 +94,31 @@ module.exports = new (DeBot.module(function (bot, group) {
 			}
 
 			if (!group.commands[cmd]) {
-				return bot.say("[Error] Command does not exist");
+				return bot.say("[Error] Command " + cmd + " does not exist");
 			}
 
 			if ("code" == key) {
-				var code = msg.Parts.splice(6).join(" ");
+
+				var msgCopy = JSON.parse(JSON.stringify(msg));
+
+				var code = msgCopy.Parts.splice(6).join(" ");
 
 				try {
 					var fnc = new Function("server", "channel", "msg", "bot", "group", "{\r\n" + 
-"					if (channel.isChannel && !group.botIsExecutor(server.alias, bot.Nick, channel.Display)) {\r\n" + 
+"					if (!group.botIsExecutor(server.alias, bot.Nick, channel)) {\r\n" + 
 "						return;\r\n" +
 "					}\r\n\r\n" +
 					
 "					var lines = [];\r\n" + 
-"					global.echo = Core.createLogWrapper(lines,  channel.Display);\r\n\r\n" +
-					cod + "\r\n\r\n" + 
+"					global.echo = Core.createLogWrapper(lines, channel.Display);\r\n\r\n" +
+					code + "\r\n\r\n" + 
 "					bot.sockets[server.alias].Write(lines);\r\n" + 
 "				}\r\n");
-					group.setCommand(cmd, );
+					group.setCommand(cmd, fnc);
 
 					bot.say("[Success] " + cmd + "'s option " + key + " has been updated!");
 				} catch( ex) {
-					return bot.say("[Error] Command does not exist");
+					return bot.say("[Error] Couldn't update command's code. " + ex);
 				}
 			}
 			else if ("locationbind" == key) {
@@ -211,7 +215,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 				if (group.setCommand(cmd, opt))
 					bot.say("[Success] " + cmd + "'s option " + key + " has been updated!");
 				else
-					bot.say("[Error] " + cmd + "'s option " + key + " was not update");
+					bot.say("[Error] " + cmd + "'s option " + key + " was not updated");
 			}
 
 		}

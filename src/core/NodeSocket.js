@@ -57,7 +57,7 @@ function NodeSocket(host, port, ssl) {
             if (backlog[n-1] == '\r') {
                 res = backlog.substring(0, n-1);
             }
-            //console.log("<= ", res);
+            if (Core.displayNetworkIn) console.log("<= ", res);
             rdCb(res);
 
             backlog = backlog.substring(n + 1);
@@ -81,6 +81,7 @@ function NodeSocket(host, port, ssl) {
         var date = new Date().getTime();
         if (typeof message == "string") {
             if (queue.length == 0) {
+                if (Core.displayNetworkOut) console.log(" |=> ", "'" + message + "'");  
                 this.Writer.write(message + "\r\n");
             }
             else 
@@ -88,7 +89,7 @@ function NodeSocket(host, port, ssl) {
         }
         else if (message.constructor === Array) {
             if (message.length == 1 && queue.length == 0) {
-                console.log(" |=> ", "'" + message + "'");  
+                if (Core.displayNetworkOut) console.log(" |=> ", "'" + message + "'");  
                 this.Writer.write(message + "\r\n");
             }
             else {
@@ -109,7 +110,6 @@ function NodeSocket(host, port, ssl) {
     });
 
     this.__defineGetter__("Writer", function() {
-        console.log("Write", new Date().getTime());
         return socket;
     });
 
@@ -121,7 +121,7 @@ function NodeSocket(host, port, ssl) {
         if (queue.length > 0 ) {
             var msg = queue.dequeue().message;
 
-            //console.log(" => ", "'" + msg + "'");
+            if (Core.displayNetworkOut) console.log(" |=> ", "'" + msg + "'");  
             this.Writer.write(msg + "\r\n");
         }
     }

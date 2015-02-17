@@ -3,7 +3,7 @@ var Bot = require('./Bot');
 var Config = require('./Config');
 var path = require('path');
 var contx = require('./NodeContext');
-var pjson = require('./package.json');
+var pjson = require('../package.json');
 
 console.tmp = console.log;
 
@@ -11,6 +11,8 @@ function Core() {
 
 }
 Core.prototype.loaded = false;
+Core.prototype.displayNetworkIn = false;
+Core.prototype.displayNetworkOut = true;
 Core.prototype.context = new contx();
 Core.prototype.bots = [];
 Core.prototype.groups = {};

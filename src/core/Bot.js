@@ -72,7 +72,9 @@ function Bot(nick, group, settings) {
 	}
 
 	this.on("OnConnectionEstablished", function (server, msg) {
+		console.log("Bot:OCE ", usableSettings.Channels);
 		for(var chan in usableSettings.Channels[server.alias]) {
+			console.log("LKSJDFLKJS", chan, usableSettings.Channels[server.alias][chan]);
 			self.sockets[server.alias].Write("JOIN " + usableSettings.Channels[server.alias][chan]);
 		}
 	});
@@ -124,7 +126,7 @@ function Bot(nick, group, settings) {
 		if (!connectInfo || !connectInfo.host) throw "connectInfo object is required. Keys: host (required), port (6667 default), ssl (false default)";
 
 		// New network and/or new bot instance not yet saved to the config
-		if (usableSettings.Channels[name]) usableSettings.Channels[name] = [];
+		if (!usableSettings.Channels[name]) usableSettings.Channels[name] = [];
 
 		self.sockets[name] = Core.context.CreateConnection(
 			"Direct", 
