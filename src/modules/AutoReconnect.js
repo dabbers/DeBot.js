@@ -31,14 +31,13 @@ module.exports = new (DeBot.module(function (bot, group) {
 
 
 function attemptRetry(bot, network) {
-
 	try {
 		bot.connect(network.network, network);
 	}
 	catch (ex) {
 		network.attempts++;
 		if (network.attempts < 3) {
-			setTimeout(attemptRetry, 50000, bot, network);
+			setTimeout(attemptRetry, (15000 * network.attempts), bot, network); // Reconnect 15 seconds increasing each try
 		}
 	}
 }

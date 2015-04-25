@@ -8,8 +8,8 @@ var pjson = require('../package.json');
 console.tmp = console.log;
 
 function Core() {
-
 }
+
 Core.prototype.loaded = false;
 Core.prototype.displayNetworkIn = false;
 Core.prototype.displayNetworkOut = true;
@@ -33,7 +33,7 @@ Core.prototype.defaultOptions = {
 };
 
 Core.prototype.defaultOptionsHelp = {
-	"locationbind":"(list/add/remove [index]) Bind the command to server-aliases/prefix#channel. Use * for wildcard. (ie:ggxy or ggxy/#ggxy or ggxy/~#ggxy.*)",
+	"locationbind":"(list/add/remove [index]) Binds command to server/prefix#channel:botNick. Use * for wildcard. (ie:ggxy or ggxy/#ggxy:D*Bot or ggxy/~#ggxy.chat*:DeBot)",
 	"level":"The minimum level required for this command. Default, everyone is level 1",
 	"allowpm":"Allow the command to be issued in a private message",
 	"hidden":"If this command is to not be listed in the commands list",

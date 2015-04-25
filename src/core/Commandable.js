@@ -1,4 +1,3 @@
-var Command = require('./Command');
 var path = require('path');
 var fs = require('fs');
 
@@ -328,12 +327,5 @@ function Commandable() {
 		}
 	});
 }
-
-/*
-Command{} +Commands 
-Command +AddCommand(string, {}, fn) 
-+DelCommand(Command | string) 
-Commandable +SetCommand(string, {}, fn)
-*/
 
 module.exports = Commandable;

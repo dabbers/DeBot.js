@@ -255,8 +255,8 @@ function Bot(nick, group, settings) {
 				if (chan) {
 					pass = chan;
 				}
-				chan = net;
-				net = self.lastNetwork;
+				chan = net || group.passer.lastChannel;
+				net = group.passer.lastNetwork;
 			}
 		}
 
@@ -280,7 +280,7 @@ function Bot(nick, group, settings) {
 				if (chan) {
 					reason = chan;
 				}
-				chan = net;
+				chan = net || self.lastChannel;
 				net = self.lastNetwork;
 			}
 		}

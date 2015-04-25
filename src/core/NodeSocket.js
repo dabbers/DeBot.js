@@ -1,5 +1,6 @@
 var Base = require('dabbit.base');
 var net = require('net');
+var tls = require('tls');
 var util = require('util');
 var PriorityQueue = require('js-priority-queue');
 
@@ -31,7 +32,11 @@ function NodeSocket(host, port, ssl) {
     var self = this;
     this.ConnectAsync = function(rawData) { 
         rdCb = rawData || function() { };  
-        socket = net.createConnection( port, host, function() { connectedState = true; console.log("connected"); });
+        if (!ssl)
+            socket = net.createConnection( port, host, function() { connectedState = true; console.log("connected"); });
+        else
+            socket = tls.connect(port, host, {rejectUnauthorized:false}, function() { connectedState = true; console.log("connected"); });
+
         socket.setEncoding('utf8');
         socket.on('data', onData);
         socket.on('end', function() { connectedState = false; console.log('disconnected'); });
