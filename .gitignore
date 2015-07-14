@@ -31,3 +31,6 @@ node_modules
 config.json
 src/storage/*
 !src/storage/readme.md
+*.pem
+src/modules/iHate.js
+src/modules/GitWebhook.js

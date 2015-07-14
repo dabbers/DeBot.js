@@ -122,10 +122,10 @@ Core.prototype.init = function(configPath) {
 // Expects an array of strings in host:+port format (+ and :port optional)
 Core.prototype.setNetwork = function(name, connectionStrings) {
 	this.config.Networks[name] = connectionStrings;
+	this.config.save();
 }
 
 Core.prototype.randomServer = function(name) {
-	console.log("NAME:", name);
 	var ran = this.config.Networks[name][Math.floor((Math.random() * this.config.Networks[name].length))];
 	var parts = ran.split(':');
 	

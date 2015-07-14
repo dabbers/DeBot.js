@@ -89,6 +89,8 @@ function BotGroup(name, settings) {
 		}
 
 		delete self.bots[botOrName];
+
+		return self;
 	}
 
 	this.addNetwork = function(networkName, connectionStringOrStrings) {
@@ -107,6 +109,8 @@ function BotGroup(name, settings) {
 			self.bots[bot].connect(networkName, Core.randomServer(networkName));
 			this.networks[networkName].PerformConnect(self.bots[bot]);
 		}
+		
+		return self;
 	}
 
 	this.delNetwork = function(networkOrName) {
@@ -115,7 +119,7 @@ function BotGroup(name, settings) {
 	
 	var command_prefix = settings.CommandPrefix;
 
-	// Condiition of a group not being added to the groups before we were adding bots to it
+	// Condiition of a group not being added to core.groups before we were adding bots to it
 	this.init = function() {
 
 		for(var botKey in settings.Bots) {
@@ -265,7 +269,6 @@ function BotGroup(name, settings) {
 
 		// Todo: Clean this up, less loops maybe?
 		var netz = settings.Networks.filter(function (n) { return n.Network == net;});
-		console.log(netz);
 		if (netz.length != 0 && netz[0].Channels.filter(function (c) { return c == chan; }).length == 0) {
 			for(var i = 0; i < Core.config.BotGroups[self.alias].Networks.length; i++) {
 				if (Core.config.BotGroups[self.alias].Networks[i].Network == net) {
@@ -281,12 +284,15 @@ function BotGroup(name, settings) {
 		for(var bot in self.bots) {
 			self.bots[bot].join(net, chan, pass);
 		}
+
+		return self;
 	}
 
 
 	/*
 	 * Mass part all bots, and remove from config a channel.
-	 * Either .part(channel)
+	 * Either .part()
+	 * Or 	  .part(channel)
 	 * Or 	  .part(channel, reason)
 	 * Or 	  .part(net, channel)
 	 * Or 	  .part(net, channel, reason)
@@ -297,25 +303,31 @@ function BotGroup(name, settings) {
 		if (!reason) {
 
 			// verify if net is actually a network
-			if (!self.sockets[net]) {
+			if (!self.networks.hasOwnProperty(net)) {
 				// net is a channel. Check if password provided
 				if (chan) {
 					reason = chan;
 				}
+
+				if (!net) {
+					net = self.passer.lastChannel;
+				}
+
 				chan = net;
-				net = self.lastNetwork;
+				net = self.passer.lastNetwork;
 			}
 		}
 
 
 		// Todo: Clean this up, less loops maybe?
 		var netz = settings.Networks.filter(function (n) { return n.Network == net;});
-		if (netz.length != 0 && netz[0].Channels.filter(function (c) { return c == chan; }).length == 0) {
+		if (netz.length != 0 && netz[0].Channels.filter(function (c) { return c == chan; }).length != 0) {
+
 			for(var i = 0; i < Core.config.BotGroups[self.alias].Networks.length; i++) {
 				if (Core.config.BotGroups[self.alias].Networks[i].Network == net) {
 					for(var j = 0; j < Core.config.BotGroups[self.alias].Networks[i].Channels.length; j++) {
 						if (Core.config.BotGroups[self.alias].Networks[i].Channels[j] == chan) {
-							Core.config.BotGroups[self.alias].Networks[i].Channels.split(j, 1);
+							Core.config.BotGroups[self.alias].Networks[i].Channels.splice(j, 1);
 							Core.config.save();
 							break;
 						}
@@ -327,9 +339,12 @@ function BotGroup(name, settings) {
 			}			
 		}
 
-		self.raw(net, "PART " + chan + " :" + (reason || ""));
-	}
+		for(var bot in self.bots) {
+			self.bots[bot].part(net, chan, reason);
+		}
 
+		return self;
+	}
 
 }
 util.inherits(BotGroup, Commandable);
