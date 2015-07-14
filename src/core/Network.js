@@ -84,6 +84,7 @@ function Network(group, ctx, name) {
 
         var attempts = 1;
 
+        // Store in variable so we can remove this function on connect.
         var nick_in_use = function() {
             botcopy.Nick = botcopy.Nick + new Array(attempts + 1).join("`");
             botcopy.Hosts[name].Nick = botcopy.Nick;
@@ -215,16 +216,16 @@ function Network(group, ctx, name) {
     this.isOpOrHigher = function(user, channel, symbol) {
         if (!symbol) symbol = "@";
 
+        if (!self.nickIsInChannel(user, channel)) {
+            return false;
+        }
+
         var list = self.Attributes["PREFIX_PREFIXES"];
         var idx = list.indexOf(symbol); // ~&@%+
 
         if (idx == -1) {
             list = self.Attributes["PREFIX_MODES"];
             idx = list.indexOf(symbol) // qaohv
-        }
-
-        if (!self.nickIsInChannel(user, channel)) {
-            return false;
         }
 
         var usridx = list.indexOf(self.Channels[channel].Users[user].Modes[0]);

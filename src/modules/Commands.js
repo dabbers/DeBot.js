@@ -13,6 +13,8 @@ module.exports = new (DeBot.module(function (bot, group) {
 		command_prefix + "addcmd", 
 		{"level":3, "timer":0, "persist":false}, 
 		function(server, channel, msg) {
+			// Every bot in the channel will execute a group module callback. We must check if a bot is
+			// the executor. The group.passer property tells you what bot executed this callback.
 			bot = group.passer;
 
 			if (channel.isChannel && !group.botIsExecutor(server.alias, bot.alias, channel)) {

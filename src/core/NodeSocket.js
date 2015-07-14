@@ -40,7 +40,7 @@ function NodeSocket(host, port, ssl) {
         socket.setEncoding('utf8');
         socket.on('data', onData);
         socket.on('end', function() { connectedState = false; console.log('disconnected'); });
-        socket.on('error', function() {  connectedState = false; console.log('error'); } );
+        socket.on('error', function() {  connectedState = false; console.log('error'); rdCb(":ERROR :Disconnected"); } );
     };
 
     this.Disconnect = function() {

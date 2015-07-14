@@ -7,15 +7,15 @@ module.exports = new (DeBot.module(function (bot, group) {
 	}
 	var lastPongs = {};
 
-	bot.on('OnPong', function() {
-		// Server sent stuffs!
+	bot.on('OnPong', function(svr, msg) {
+		lastPongs[svr.alias] = new Date().getTime();
 	});
 
-	bot.on('OnError', function() {
-
+	bot.on('OnError', function(svr, msg) {
+		attemptRetry(bot, { "network": svr.alias, "host": bot.sockets[svr.alias].Host, "port": bot.sockets[svr.alias].Port, "ssl": bot.sockets[svr.alias].Secure, "attempts": 1});
 	});
 
-	setInterval(function() {
+	/*setInterval(function() {
 		var now = new Date().getTime();
 
 		for(var i in bot.sockets) {
@@ -26,7 +26,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 			bot.raw(i, "PING :debot.js")
 		}
 		
-	}, 50000); // Every 50 seconds send a ping request to check for any connection loss.
+	}, 50000); // Every 50 seconds send a ping request to check for any connection loss.*/
 }))();
 
 

@@ -54,7 +54,7 @@ function NodeContext() {
     }
 
     /// <summary>
-    /// Create a channel object
+    /// Create a user object
     /// <param name="source">(OPTIONAL) The SourceEntity object we want to create the user from. If no SourceEntity is passed, we pass an empty user</param>
     /// <returns>An object that either is, or inherits from User</returns>
     this.CreateUser = function(source) {

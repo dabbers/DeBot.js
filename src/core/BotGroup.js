@@ -51,7 +51,7 @@ function BotGroup(name, settings) {
 
 				botOrName.on("OnConnectionEstablished", function(server, msg) {
 					for(var networkIndex = 0; networkIndex < settings.Networks.length; networkIndex++) {
-						
+
 						if (settings.Networks[networkIndex].Network == server.alias) {
 
 							for(var chanIdx = 0; chanIdx < settings.Networks[networkIndex].Channels.length; chanIdx++) {
@@ -309,11 +309,7 @@ function BotGroup(name, settings) {
 					reason = chan;
 				}
 
-				if (!net) {
-					net = self.passer.lastChannel;
-				}
-
-				chan = net;
+				chan = net || self.passer.lastChannel;
 				net = self.passer.lastNetwork;
 			}
 		}

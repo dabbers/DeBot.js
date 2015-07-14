@@ -4,6 +4,7 @@ var irc = require('dabbit.base');
 var socket = require('./NodeSocket');
 var commandable = require('./Commandable');
 var moduleHandler = require('./ModuleHandler');
+var ConnectionType = require('./ConnectionType');
 
 function Bot(nick, group, settings) {
 	this.isBot = true;
@@ -124,7 +125,7 @@ function Bot(nick, group, settings) {
 		if (!usableSettings.Channels[name]) usableSettings.Channels[name] = [];
 
 		self.sockets[name] = Core.context.CreateConnection(
-			"Direct", 
+			ConnectionType.Direct, 
 			Core.context.CreateSocket(
 				connectInfo.host, 
 				connectInfo.port || 6667, 
@@ -259,7 +260,8 @@ function Bot(nick, group, settings) {
 	}
 
 	/*
-	 * Either .part(channel)
+	 * Either .part()
+	 * Or 	  .part(channel)
 	 * Or 	  .part(channel, reason)
 	 * Or 	  .part(net, channel)
 	 * Or 	  .part(net, channel, reason)
