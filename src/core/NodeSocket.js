@@ -40,7 +40,7 @@ function NodeSocket(host, port, ssl) {
         socket.setEncoding('utf8');
         socket.on('data', onData);
         socket.on('end', function() { connectedState = false; console.log('disconnected'); });
-        socket.on('error', function() { console.log(arguments); } );
+        socket.on('error', function() {  connectedState = false; console.log('error'); } );
     };
 
     this.Disconnect = function() {
@@ -62,6 +62,7 @@ function NodeSocket(host, port, ssl) {
             if (backlog[n-1] == '\r') {
                 res = backlog.substring(0, n-1);
             }
+
             if (Core.displayNetworkIn) console.log("<= ", res);
             rdCb(res);
 

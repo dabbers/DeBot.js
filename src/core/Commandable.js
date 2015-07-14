@@ -34,7 +34,6 @@ function Commandable() {
 				if (self.commands[i].options.persist) {
 					cmds[i] = {};
 				    for (var attr in self.commands[i]) {
-				    	console.tmp(attr);
         				if (self.commands[i].hasOwnProperty(attr)) cmds[i][attr] = self.commands[i][attr];
 					}
 

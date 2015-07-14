@@ -6,8 +6,7 @@ exports.load = function(path) {
 	var confg = JSON.parse(fs.readFileSync(path));
 
 	confg.save = function() {
-		console.log("OMG SAVE HERE");
-		fs.writeFile(path, JSON.stringify(confg, null, 4), function (err) {
+			fs.writeFile(path, JSON.stringify(confg, null, 4), function (err) {
 			if (err) {
 				console.log("[Config.js] There was an issue saving the config: ", err);
 			}

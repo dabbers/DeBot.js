@@ -51,7 +51,7 @@ function BotGroup(name, settings) {
 
 				botOrName.on("OnConnectionEstablished", function(server, msg) {
 					for(var networkIndex = 0; networkIndex < settings.Networks.length; networkIndex++) {
-						console.log(server.alias, settings.Networks[networkIndex].Network);
+						
 						if (settings.Networks[networkIndex].Network == server.alias) {
 
 							for(var chanIdx = 0; chanIdx < settings.Networks[networkIndex].Channels.length; chanIdx++) {

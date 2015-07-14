@@ -11,14 +11,13 @@ function Bot(nick, group, settings) {
 	var self = this;
 	var al = nick;
 
-	this.__defineGetter__('alias', function(){
+	this.__defineGetter__('alias', function() {
 		return al;
 	});
 
-	this.__defineGetter__('group', function(){
+	this.__defineGetter__('group', function() {
 		group.passer = self;
 		return group;
-
 	});
 
 	irc.User.call(this);
@@ -72,9 +71,7 @@ function Bot(nick, group, settings) {
 	}
 
 	this.on("OnConnectionEstablished", function (server, msg) {
-		console.log("Bot:OCE ", usableSettings.Channels);
 		for(var chan in usableSettings.Channels[server.alias]) {
-			console.log("LKSJDFLKJS", chan, usableSettings.Channels[server.alias][chan]);
 			self.sockets[server.alias].Write("JOIN " + usableSettings.Channels[server.alias][chan]);
 		}
 	});
@@ -87,14 +84,12 @@ function Bot(nick, group, settings) {
 
 	this.on("OnNewChannelJoin", function (server, msg) {
 		// Is this channel already a channel the bot is trying to join?
-		console.log(self.alias, msg, usableSettings);
-		if (usableSettings.Channels[server.alias] && usableSettings.Channels[server.alias].filter(function (ch) { console.log("dis", ch); return ch == msg.Channel; }).length != 0 ) {
+		if (usableSettings.Channels[server.alias] && usableSettings.Channels[server.alias].filter(function (ch) { return ch == msg.Channel; }).length != 0 ) {
 			return;
 		}
 
 		// If this was group requested, it would be saved in the settings before being dispursed to all the bots.
 		var groupNetworkSetting = group.settings.Networks.filter(function (net) { return net.Network == server.alias; });
-		console.log(groupNetworkSetting);
 		if (groupNetworkSetting.length !=0 && groupNetworkSetting[0].Channels.filter(function (ch) { return ch == msg.Channel; }).length != 0) {
 			return;
 		}
@@ -166,7 +161,7 @@ function Bot(nick, group, settings) {
 				net = self.lastNetwork;
 			}
 		}
-		console.log("BOT.SAY", net, chan, msg);
+
 		self.sockets[net].Write("PRIVMSG " + chan + " :" + msg);
 	}
 
