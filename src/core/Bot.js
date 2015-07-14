@@ -4,7 +4,7 @@ var irc = require('dabbit.base');
 var socket = require('./NodeSocket');
 var commandable = require('./Commandable');
 var moduleHandler = require('./ModuleHandler');
-var ConnectionType = require('./ConnectionType');
+var ConnectionType = irc.ConnectionType;
 
 function Bot(nick, group, settings) {
 	this.isBot = true;
