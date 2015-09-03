@@ -9,7 +9,7 @@ function NodeSocket(host, port, ssl) {
     Base.ISocketWrapper.call(this);
 
     var socket = undefined;
-    var backlog = String.Empty;
+    var backlog = "";
     var rdCb = undefined;
     var connectedState = false;
 

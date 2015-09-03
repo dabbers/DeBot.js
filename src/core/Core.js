@@ -39,7 +39,7 @@ Core.prototype.defaultOptionsHelp = {
 	"hidden":"If this command is to not be listed in the commands list",
 	"exception":"(list/add/remove [index]) Timer exceptions on user mode:seconds (ie: @:4), level:seconds (ie: 1:5), nick:2 (ie: nick:sec or [*!*@*]:5), and #channel:sec .",
 	"timer":"The timer throttle for the command between each command",
-	"persit":"If this command should be written to file so it can be reloaded upon bot load",
+	"persist":"If this command should be written to file so it can be reloaded upon bot load",
 	"code":"The code to execute on command call"
 };
 
