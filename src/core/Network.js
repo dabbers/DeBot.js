@@ -130,6 +130,8 @@ function Network(group, ctx, name) {
         });
 
         botcopy.on('OnWhois', function(svr, msg) { 
+            if (!msg.Who) return;
+            
             if (msg.Who.Nick == botcopy.Nick) {
                 botcopy.Ident = msg.Who.Ident;
                 botcopy.Host = msg.Who.Host;
