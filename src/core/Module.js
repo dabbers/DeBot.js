@@ -46,8 +46,18 @@ function Module(callback, uninitCallback) {
 			global.oldInterval = global.setInterval;
 
 			global.setInterval = function() {
-				var tmrobj = setInterval.apply(callback, arguments);
-				tmrobj.unref();
+				console.log(arguments);
+
+				var cb = arguments[0];
+				var args = Array.prototype.splice.call(arguments, 1);
+
+				console.log(cb);
+				console.log(args);
+
+				var tmrobj = oldInterval(cb, args);
+				
+				tmrobj.unref(); // prevent from keeping the event loop open
+
 				lines.push(tmrobj);
 				return tmrobj;
 			}
