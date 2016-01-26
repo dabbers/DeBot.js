@@ -27,7 +27,7 @@ function createFakeGroup(realGroup) {
 			}
 			else if ("cleanupMethods" == name) {
 				return function() {
-					callbacksToRemove.forEach(function(cb) { realBot.removeListener(cb.event, cb.cb); } );
+					callbacksToRemove.forEach(function(cb) { realGroup.removeListener(cb.event, cb.cb); } );
 					for(var i = 0; i < commandsToRemove.length; i++) {
 						realGroup.delCommand(commandsToRemove[i]);
 					}
