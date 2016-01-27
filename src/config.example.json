@@ -122,5 +122,22 @@
 			"level":2,
 			"BotGroup":["cibby"]
 		}
-	]
+	],
+    "Modules": {
+    	/* 	You can store module specific settings here. Access using
+			 Core.config.Modules.ModuleName.Setting. Ie:
+			 Core.config.Modules.PlexAnnounce.hostname
+		*/
+        "PlexAnnounce": {
+            "hostname": "server name here",
+            "username": "Server owner login name",
+            "password": "Password Here",
+            "lastSeen": 0,
+            "channel": "#Channel to output plex adds",
+            "network": "network name to output plex adds"
+        },
+        "Titles": {
+            "YouTube": "Youtube api key"
+        }
+    }
 }

@@ -7,7 +7,9 @@
     "dabbit.base": "^0.4.1",
     "harmony-reflect": "^1.1.1",
     "js-priority-queue": "^0.1.1",
-    "proxy-handlers": "0.0.3"
+    "plex-api": "^3.2.0",
+    "proxy-handlers": "0.0.3",
+    "request": "^2.67.0"
   },
   "devDependencies": {},
   "scripts": {
