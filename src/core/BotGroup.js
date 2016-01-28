@@ -62,9 +62,9 @@ function BotGroup(name, settings) {
 					}
 				});
 
-				botOrName.on("OnPrivmsg", function(server, msg) {
-					self.emit("OnPrivmsg", server, msg, botOrName);
-				});
+				botOrName.on("OnPrivmsg", function(bk) { return function(server, msg) {
+					self.emit("OnPrivmsg", server, msg, bk);
+				}; }(botOrName));
 
 				for(var networkIndex = 0; networkIndex < settings.Networks.length; networkIndex++) {
 					botOrName.connect(settings.Networks[networkIndex].Network, Core.randomServer(settings.Networks[networkIndex].Network));
@@ -142,9 +142,9 @@ function BotGroup(name, settings) {
 			}(botKey));
 
 			// Make all bots forward their PRIVMSG events to the botgroup just in case a botgroup command is called
-			self.bots[botKey].on("OnPrivmsg", function(server, msg) {
-				self.emit("OnPrivmsg", server, msg);
-			});
+			self.bots[botKey].on("OnPrivmsg", function(bk) { return function(server, msg) {
+				self.emit("OnPrivmsg", server, msg, self.bots[bk]);
+			}; }(botKey));
 		}
 		
 		for(var network in settings.Networks) {

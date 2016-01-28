@@ -113,30 +113,37 @@ function Commandable() {
 	this.on("OnPrivmsg", function(server, msg, sender) {
 		var cmd = msg.Parts[3].substring(1).toLowerCase();
 
-		if (self.commands.hasOwnProperty(cmd) && this.functionCanExecute(server, self.commands[cmd], msg)) {
-			var lines = [];
+		if (self.commands.hasOwnProperty(cmd)) {
+
+
+			var bot = self;
+			var group = self;
+
 			var channel = server.isChannel(msg.To.Parts[0]) ? 
 				server.Channels[msg.To.Parts[0]] : 
 				{"isChannel":false, "Display":msg.From.Parts[0], "Parts":["", "", msg.To.Parts[0]]};
 
-			global.echo = Core.createLogWrapper(lines,  channel.Display);
-			
-			var bot = self;
-			var group = self;
 			if (!bot.isBot) {
-				bot = group.getBotExecutor(server.alias, group.passer.Nick, channel.Display);
+				bot = sender;
 			}
 			else {
 				group = self.group;
 			}
 
-			bot.lastChannel = (msg.To.Type == "Client" ? msg.From.Parts[0] : msg.To.Parts[0]);
-			bot.lastNetwork = server.alias;
+			if (group.botIsExecutor(server.alias, bot.alias, channel) && this.functionCanExecute(server, self.commands[cmd], msg)) {
+				var lines = [];
 
-			self.commands[cmd].callback(server, channel, msg, bot, group);
+				global.echo = Core.createLogWrapper(lines,  channel.Display);
+				
 
-			bot.sockets[server.alias].Write(lines);
-		}
+				bot.lastChannel = (msg.To.Type == "Client" ? msg.From.Parts[0] : msg.To.Parts[0]);
+				bot.lastNetwork = server.alias;
+
+				self.commands[cmd].callback(server, channel, msg, bot, group);
+
+				bot.sockets[server.alias].Write(lines);
+			}
+		} 
 
 	});
 

@@ -51,14 +51,8 @@ module.exports = new (DeBot.module(function (bot, group) {
 
 			group.addCommand(cmd, function (cod) {
 				return new Function("server", "channel", "msg", "bot", "group", "{\r\n" + 
-"					if (!group.botIsExecutor(server.alias, bot.Nick, channel)) {\r\n" + 
-"						return;\r\n" +
-"					}\r\n\r\n" +
-					
-"					var lines = [];\r\n" + 
-"					global.echo = Core.createLogWrapper(lines, channel.Display);\r\n\r\n" +
+
 					cod + "\r\n\r\n" + 
-"					bot.sockets[server.alias].Write(lines);\r\n" + 
 "				}\r\n") 
 			}(code));
 
@@ -106,15 +100,8 @@ module.exports = new (DeBot.module(function (bot, group) {
 				var code = msgCopy.Parts.splice(6).join(" ");
 
 				try {
-					var fnc = new Function("server", "channel", "msg", "bot", "group", "{\r\n" + 
-"					if (!group.botIsExecutor(server.alias, bot.Nick, channel)) {\r\n" + 
-"						return;\r\n" +
-"					}\r\n\r\n" +
-					
-"					var lines = [];\r\n" + 
-"					global.echo = Core.createLogWrapper(lines, channel.Display);\r\n\r\n" +
+					var fnc = new Function("server", "channel", "msg", "bot", "group", "{\r\n" + 					
 					code + "\r\n\r\n" + 
-"					bot.sockets[server.alias].Write(lines);\r\n" + 
 "				}\r\n");
 					group.setCommand(cmd, fnc);
 
