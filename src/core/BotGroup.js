@@ -183,6 +183,7 @@ function BotGroup(name, settings) {
 		var botkeys = Object.keys(self.bots);
 		var firstbot = botkeys[0];
 
+
 		// Loop while not in the channel, and we've not reached the last item (without going past it)
 		while(
 			!self.networks[serverAlias].nickIsInChannel(self.bots[firstbot].Hosts[serverAlias].Nick, channel.Display) 
@@ -225,7 +226,12 @@ function BotGroup(name, settings) {
 
 		var msgCopy = JSON.parse(JSON.stringify(msg));
 
-		eval(msgCopy.Parts.splice(4).join(" "));
+		try {
+			eval(msgCopy.Parts.splice(4).join(" "));
+		}
+		catch(exception) {
+			bot.say(server.alias, channel.Display, "[RAWERR] " + exception);
+		}
 	});
 
 	// a handy clear buffer command in case you start spamming the channel.

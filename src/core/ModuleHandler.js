@@ -13,17 +13,17 @@ function ModuleHandler (obj) {
 
 		if (obj.modules[modname]) obj.unloadModule(modname);
 		
-		//try {
+		try {
 			var modpath = Core.relativeToAbsolute('modules/'+ modname);
 			if (require.cache[modpath + ".js"]) delete require.cache[modpath + ".js"];
 
 			var module1 = require(modpath);
 			obj.modules[modname] = module1;
 			module1.init(this);
-		//}
-		//catch(ex) {
-		//	throw "Failed to laod module " + modpath + ". " + ex;
-		//}
+		}
+		catch(ex) {
+			throw "Failed to laod module " + modpath + ". " + ex;
+		}
 
 		return obj;
 	}
