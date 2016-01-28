@@ -62,7 +62,15 @@
 						"ggxy": ["#secret password"],
 						"example": ["##otherchannel"]
 					},
-					"Modules":["dtime"]
+					"Modules":["dtime"],
+					// You can have commands be sent to the server when connecting. You can have messages sent
+					// immediately, or you can have them delayed by x milliseconds. 
+                    "Commands": {
+                        "ggxy": [
+                            "NS IDENTIFY IMustIdentifyWithAnotherRobot?",
+                            {"delay":"10000", "command":"PRIVMSG IdleRPG :login DelayedRobotMessage ThisIsADelayedMessage" }
+                        ]
+                    }
 				}
 			},
 			// Modules every bot must load.

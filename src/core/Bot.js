@@ -75,6 +75,17 @@ function Bot(nick, group, settings) {
 		for(var chan in usableSettings.Channels[server.alias]) {
 			self.sockets[server.alias].Write("JOIN " + usableSettings.Channels[server.alias][chan]);
 		}
+
+		for(var cmd in usableSettings.Commands[server.alias]) {
+			if (typeof usableSettings.Commands[server.alias][cmd] == "string") {
+				self.sockets[server.alias].Write(usableSettings.Commands[server.alias][cmd]);
+			}
+			else if (usableSettings.Commands[server.alias][cmd].delay) {
+				setTimeout(function(cmd) { return function() {
+					self.sockets[server.alias].Write(cmd);
+				}}(usableSettings.Commands[server.alias][cmd].command), usableSettings.Commands[server.alias][cmd].delay);
+			}
+		}
 	});
 
 	this.on("OnQueryCtcp", function (server, msg) {
