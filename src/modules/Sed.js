@@ -27,6 +27,7 @@ function performSedThing(server, msg) {
 	}
 	catch(ex) {
 		_bot.say(server.alias, msg.To.Parts[0], "[Sed Error] " + ex);
+		return;
 	}
 
 	if (_history[msg.To.Parts[0]].length >= 50) _history[msg.To.Parts[0]].shift();

@@ -192,7 +192,7 @@ module.exports = new (DeBot.module(function (bot, group) {
 		throw "This module can only be used by a BotGroup";
 	}
 
-	group.passer.on('OnPrivmsg', function(svr, msg) {
+	group.on('OnPrivmsg', function(svr, msg) {
 
 		createlabel(msg, function(response) {
 			console.log("RESPONSE", response);
