@@ -194,8 +194,12 @@ module.exports = new (DeBot.module(function (bot, group) {
 
 	group.on('OnPrivmsg', function(svr, msg) {
 
+		if (!group.botIsExecutor(svr.alias, group.passer.alias, svr.Channels[msg.Parts[2]] || {"isChannel":false, "Display":msg.Parts[2]})) {
+		    return;
+		}
+
 		createlabel(msg, function(response) {
-			console.log("RESPONSE", response);
+
 			group.passer.say(svr.alias, msg.Parts[2], response);
 		});
 	});
