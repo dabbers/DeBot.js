@@ -29,5 +29,8 @@
   "bugs": {
     "url": "https://github.com/dabbers/DeBot.js/issues"
   },
-  "homepage": "https://github.com/dabbers/DeBot.js"
+  "homepage": "https://github.com/dabbers/DeBot.js",
+  "scripts": {
+    "start": "node debug --harmony_proxies index.js"
+  }
 }
