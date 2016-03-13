@@ -27,7 +27,7 @@ function BotGroup(name, settings) {
 
 	this.on('tick', function() {
 		for(var i in self.bots) {
-			self.bots[i].tick();
+			self.bots[i].emit('tick');
 		}
 	});
 
