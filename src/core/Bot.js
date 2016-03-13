@@ -62,7 +62,12 @@ function Bot(nick, group, settings) {
 
 	var usableSettings = (settings || group);
 
-	this.Nick = usableSettings.Nick;
+	this.__defineGetter__('settings', function(){
+		return usableSettings;
+	})
+
+
+	this.Nick = usableSettings.Nick; // DO NOT REFER TO THIS IF YOU CAN AVOID IT
 	this.Hosts = {}; // Nick, Ident, Host for each network.
 	this.Ident = usableSettings.Ident;
 	this.Name = Core.config.OwnerNicks + "'s bot";
@@ -294,6 +299,22 @@ function Bot(nick, group, settings) {
 		}
 
 		self.raw(net, "PART " + chan + " :" + (reason|| "") );
+	}
+
+	/*
+	 * Either .nick(newNick)
+	 * Or 	  .nick(channel, panewNickss)
+	 */
+	this.nick = function(net, newNick) {
+		// Check if pass provided because that means the other 2 aren't what they
+		// are supposed to be if no pass is provided
+		if (!newNick) {
+			// net is a newNick
+			newNick = net;
+			net = group.passer.lastNetwork;
+		}
+
+		self.raw(net, "NICK " + newNick);
 	}
 }
 util.inherits(Bot, 			  irc.User);
