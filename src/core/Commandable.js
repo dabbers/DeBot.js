@@ -130,7 +130,7 @@ function Commandable() {
 				group = self.group;
 			}
 
-			if (group.botIsExecutor(server.alias, bot.alias, channel) && this.functionCanExecute(server, self.commands[cmd], msg)) {
+			if ( (self.isBot || group.botIsExecutor(server.alias, bot.alias, channel) ) && this.functionCanExecute(server, self.commands[cmd], msg)) {
 				var lines = [];
 
 				global.echo = Core.createLogWrapper(lines,  channel.Display);
