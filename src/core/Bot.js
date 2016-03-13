@@ -119,7 +119,7 @@ function Bot(nick, group, settings) {
 
 
 	this.on("OnPart", function (server, msg) {
-		if (msg.From.Parts[0] != self.Nick) {
+		if (msg.From.Parts[0] != self.Hosts[server.alias].Nick) {
 			return;
 		}
 

@@ -79,17 +79,17 @@ function Network(group, ctx, name) {
         botcopy.Hosts[name] = {"Nick": bot.Nick,"Ident": bot.Ident,"Host": bot.Host,    };
 
         botcopy.on('OnNickChange', function(svr, msg) {
-            botcopy.Hosts[name].Nick = botcopy.Nick; // Update even if the bot isn't the one doing the /nick
+            if (msg.From.Parts[0] == botcopy.Hosts[name].Nick) {
+                botcopy.Nick = msg.To;
+                botcopy.Hosts[name].Nick = msg.To; // Update even if the bot isn't the one doing the /nick
+            }
         });
-
-        var attempts = 1;
 
         // Store in variable so we can remove this function on connect.
         var nick_in_use = function() {
-            botcopy.Nick = botcopy.Nick + new Array(attempts + 1).join("`");
+            botcopy.Nick = botcopy.Hosts[name].Nick + "`";
             botcopy.Hosts[name].Nick = botcopy.Nick;
-            botcopy.sockets[name].Write("NICK " + botcopy.Nick);
-            attempts++;
+            botcopy.sockets[name].Write("NICK " + botcopy.Hosts[name].Nick);
         };
         botcopy.on("433", nick_in_use);
 
@@ -110,10 +110,9 @@ function Network(group, ctx, name) {
         });
 
         botcopy.on('OnConnectionEstablished', function(svr, msg) {
-            botcopy.sockets[name].Write("WHOIS " + botcopy.Nick);
-            //whoisLibraryRequested.push(botcopy.Nick);
+            botcopy.sockets[name].Write("WHOIS " + botcopy.Hosts[name].Nick);
 
-            botcopy.sockets[name].Write("MODE " + botcopy.Nick + " +B");
+            botcopy.sockets[name].Write("MODE " + botcopy.Hosts[name].Nick + " +B");
             botcopy.removeListener("433", nick_in_use);
             attempts = 0;
         });
@@ -132,7 +131,7 @@ function Network(group, ctx, name) {
         botcopy.on('OnWhois', function(svr, msg) { 
             if (!msg.Who) return;
             
-            if (msg.Who.Nick == botcopy.Nick) {
+            if (msg.Who.Nick == botcopy.Hosts[name].Nick) {
                 botcopy.Ident = msg.Who.Ident;
                 botcopy.Host = msg.Who.Host;
                 botcopy.Hosts[name].Ident = msg.Who.Ident;
@@ -157,7 +156,7 @@ function Network(group, ctx, name) {
 
         // Luckily javascript is single threaded... this would not work if it wasn't.
         botcopy.sockets[name].ConnectAsync(function(msg) { 
-            group.passer = botcopy; 
+            group.passer = botcopy;
             botcopy.Nick = botcopy.Hosts[name].Nick;
             botcopy.Ident = botcopy.Hosts[name].Ident;
             botcopy.Host = botcopy.Hosts[name].Host;
