@@ -11,7 +11,7 @@ Rename or copy config.example.json to config.json. Make your changes to the conf
 
 Once done, you can launch the bot.
 
-To do this, do `node --harmony index.js` The bot will then start. The --harmony flag is requred because DeBot.js uses a few features of ECMA6 (mainly the Proxy object). Once node.js/V8 have native Proxy object included, the flag should no longer be nessecary.
+To do this, do `node --harmony_proxies index.js` The bot will then start. The --harmony flag is requred because DeBot.js uses a few features of ECMA6 (mainly the Proxy object). Once node.js/V8 have native Proxy object included, the flag should no longer be nessecary.
 
 
 Writing Modules
@@ -27,7 +27,8 @@ module.exports = new (DeBot.module(function (bot, group) {
 
 ```
 
-The module will need to go into /src/modules/. Modules will work for both a BotGroup and Bot. If the module is loaded via a BotGroup, the bot object will always be null/undefined. 
+The module will need to go into /src/modules/. Modules will work for both a BotGroup and Bot. If the module is loaded via a BotGroup, the bot object will always be null/undefined. See the structure of DeBot.js for information on how to handle BotGroup events.
+
 
 
 ***Note that when you are adding commands via a module, you need to pass the persist setting as false. Otherwise the command will be stored and loaded on restarts. Depending on the callback given, it may crash the bot. Example of setting persist to false is provided below.***
@@ -47,21 +48,47 @@ Going from the bottom up. The heierarchy looks like so:
 
 index -> Core -> BotGroups -> Bots -> Networks.
 
-Each bot has an map of socket connections to networks. Each BotGroup has bots that are all connected to the same networks. This gives your BotGroup the ability to be distributed across the network during netsplits.
+Each bot has a map of socket connections to networks. Each BotGroup has bots that are all connected to the same networks. This gives your BotGroup the ability to be distributed across the network during netsplits.
 
-Each BotGroup and Bots can have commands. Bots emit the Command callback on the botgroup, meaning if you have multiple bots in a channel, a botgroup command can be called more than once. If you only want one bot to execute this command, you can use the following snippet:
+Each BotGroup and Bots can have commands. Bots emit the Command callback on the botgroup, meaning if you have multiple bots in a channel, a botgroup command can be called more than once
+
+When a group callback is fired due to an IRC event, it will be executed for each bot in the bot group that received that event. If you have 2 bots that are in a channel, and a privmsg event is fired, the BotGroup will fire the OnPrivmsg event twice.
+
+Due to this, you will want to check if the bot is the executor, before performing any code. If you only want one bot to execute this command or event, you can use the following snippet:
+
 
 ```
-if (!group.botIsExecutor(server.alias, bot.Nick, channel)) {
+if (!group.botIsExecutor(server.alias, bot.alias, channel)) {
 	return;
 }
 .... // Code to execute as this bot
 
 ```
 
-The Commands module is an easier way to do this. It is only usable on a BotGroup due to injecting the code above.
+To get the bot in a module, you can access the ``` group.passer ``` property. The passer is the IRC bot that initiated this event.
 
-A Bot can have modulese on its own, and can have its own Commands. It can have its own channels, but cannot have its own networks. 
+If you want to just add simple commands to the bot, it's best to use the !addcmd function inside IRC. The check for the bot executor is inserted automatically. 
+
+
+A Bot can have modules of its own, and can have its own Commands. It can have its own channels (its own unique channels), but cannot have its own networks. 
+
+For example, you can have the following:
+IRC Server
+	Channel1: 
+		Bot 1
+		Bot 2
+	Channel2:
+		Bot 2
+	Channel3:
+		Bot 1
+IRC Server 2
+	Bot 2 (no channels)
+	Channel1:
+		Bot 1
+
+All bots must be on the same networks, but can have any assortment of channels. 
+Any bot can have any of their own modules, and their own commands. 
+ 
 
 Anatomy of a callback
 =============================
