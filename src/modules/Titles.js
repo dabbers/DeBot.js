@@ -185,22 +185,26 @@ function getImdbLabel(video_id, respCb) {
 
 
 
-
+var _group = undefined;
 
 module.exports = new (DeBot.module(function (bot, group) {
 	if (bot) {
 		throw "This module can only be used by a BotGroup";
 	}
+	
+	_group = group;
 
 	group.on('OnPrivmsg', function(svr, msg) {
 
-		if (!group.botIsExecutor(svr.alias, group.passer.alias, svr.Channels[msg.Parts[2]] || {"isChannel":false, "Display":msg.Parts[2]})) {
+		if (!group.botIsExecutor(svr.alias, _group.passer.alias, svr.Channels[msg.Parts[2]] || {"isChannel":false, "Display":msg.Parts[2]})) {
 		    return;
 		}
 
+		var tmpBot = _group.passer;
+		
 		createlabel(msg, function(response) {
-
-			group.passer.say(svr.alias, msg.Parts[2], response);
+		
+			tmpBot.say(svr.alias, msg.Parts[2], response);
 		});
 	});
 }))();
