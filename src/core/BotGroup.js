@@ -227,7 +227,13 @@ function BotGroup(name, settings) {
 		var msgCopy = JSON.parse(JSON.stringify(msg));
 
 		try {
-			eval(msgCopy.Parts.splice(4).join(" "));
+			var lines = (eval(msgCopy.Parts.splice(4).join(" "))).toString().split("\n");
+			
+			for(var i in lines)
+			{
+				bot.say(server.alias, channel.Display, lines[i]);
+			}
+			
 		}
 		catch(exception) {
 			bot.say(server.alias, channel.Display, "[RAWERR] " + exception);
