@@ -19,6 +19,7 @@ function ModuleHandler (obj) {
 
 			var module1 = require(modpath);
 			obj.modules[modname] = module1;
+			module1.toString = function() { return "[" + modname + " (Module)]" };
 			module1.init(this);
 		//}
 		//catch(ex) {

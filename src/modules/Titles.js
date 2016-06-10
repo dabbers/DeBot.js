@@ -7,11 +7,13 @@ var DeBot = require('../core/Module');
 var Urls = {
 	'www.youtube.com': [getYoutubeLabel, function(parse) { return parse.query.v; } ],
 	'youtube.com': [getYoutubeLabel, function(parse) { return parse.query.v; } ],
-	'youtu.be': [getYoutubeLabel, function(parse) { return parse.path.substring(1); } ],
-	'www.youtu.be': [getYoutubeLabel, function(parse) { return parse.path.substring(1); } ],
-	'www.imdb.com': [getImdbLabel, function(parse) { return parse.path.split('/')[2]; } ],
-	'imdb.com': [getImdbLabel, function(parse) { return parse.path.split('/')[2]; } ],
-	'open.spotify.com': [getSpotifyLabel, function(parse) { var pths = parse.path.split('/'); if (pths[1] == 'track') return pths[2]; } ]
+	'youtu.be': [getYoutubeLabel, function(parse) { return parse.pathname.substring(1); } ],
+	'www.youtu.be': [getYoutubeLabel, function(parse) { return parse.pathname.substring(1); } ],
+	'www.imdb.com': [getImdbLabel, function(parse) { return parse.pathname.split('/')[2]; } ],
+	'imdb.com': [getImdbLabel, function(parse) { return parse.pathname.split('/')[2]; } ],
+	'open.spotify.com': [getSpotifyLabel, function(parse) { var pths = parse.pathname.split('/'); if (pths[1] == 'track') return pths[2]; } ],
+	'vimeo.com': [getVimeoLabel, function(parse) { return parse.pathname.substring(1); } ],
+	'www.vimeo.com': [getVimeoLabel, function(parse) { return parse.pathname.substring(1); } ],
 };
 
 
@@ -19,16 +21,17 @@ var Urls = {
 
 // Tests
 /*createlabel({"Parts":["", "", "", ":https://www.youtube.com/watch?v=PMu9G8vovZc"]});
-createlabel({"Parts":["https://youtu.be/PMu9G8vovZc"]});
-createlabel({"Parts":["https://youtu.be/PMu9G8vovZc?t=3s"]});
-createlabel({"Parts":["https://www.youtube.com/watch?t=3s&v=PMu9G8vovZc"]});
-createlabel({"Parts":["https://youtube.com/watch?v=PMu9G8vovZc"]});
+createlabel({"Parts":["", "", "", ":https://youtu.be/PMu9G8vovZc"]});
+createlabel({"Parts":["", "", "", ":https://youtu.be/PMu9G8vovZc?t=3s"]});
+createlabel({"Parts":["", "", "", ":https://www.youtube.com/watch?t=3s&v=PMu9G8vovZc"]});
+createlabel({"Parts":["", "", "", ":https://youtube.com/watch?v=PMu9G8vovZc"]});
 createlabel({"Parts":["", "", "", ":https://open.spotify.com/track/6f3slULfHE3new2P0uALKS"]});
-createlabel({"Parts":["http://www.imdb.com/title/tt2975590/?ref_=hm_hp_cap_pri_1&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=2395419482&pf_rd_r=021HV1X3CZ5W2VXDJKSJ&pf_rd_s=hero&pf_rd_t=15061&pf_rd_i=homepage"]});
-createlabel({"Parts":["http://www.imdb.com/title/tt0944947/?ref_=hm_hp_cap_pri_3&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=2395419482&pf_rd_r=021HV1X3CZ5W2VXDJKSJ&pf_rd_s=hero&pf_rd_t=15061&pf_rd_i=homepage "]});
-createlabel({"Parts":["http://www.imdb.com/title/tt0944947/episodes?season=3&ref_=tt_eps_sn_3"]});
-createlabel({"Parts":["http://www.imdb.com/title/tt3514324/?ref_=fn_al_tt_1"]});
-createlabel({"Parts":["http://imdb.com/title/tt3514324/?ref_=fn_al_tt_1"]});
+createlabel({"Parts":["", "", "", ":http://www.imdb.com/title/tt2975590/?ref_=hm_hp_cap_pri_1&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=2395419482&pf_rd_r=021HV1X3CZ5W2VXDJKSJ&pf_rd_s=hero&pf_rd_t=15061&pf_rd_i=homepage"]});
+createlabel({"Parts":["", "", "", ":http://www.imdb.com/title/tt0944947/?ref_=hm_hp_cap_pri_3&pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=2395419482&pf_rd_r=021HV1X3CZ5W2VXDJKSJ&pf_rd_s=hero&pf_rd_t=15061&pf_rd_i=homepage "]});
+createlabel({"Parts":["", "", "", ":http://www.imdb.com/title/tt0944947/episodes?season=3&ref_=tt_eps_sn_3"]});
+createlabel({"Parts":["", "", "", ":http://www.imdb.com/title/tt3514324/?ref_=fn_al_tt_1"]});
+createlabel({"Parts":["", "", "", ":http://imdb.com/title/tt3514324/?ref_=fn_al_tt_1"]});
+createlabel({"Parts":["", "", "", ":https://vimeo.com/3568757"]}, function(d) { console.log(d);});
 */
 
 function createlabel(ircMsg, cb) {
@@ -92,8 +95,8 @@ function getYoutubeLabel(video_id, respCb) {
 
 	    	response += " [" +
 	    		 (rg[3] ? " " + (rg[3] < 10?"0":"") + parseInt(rg[3]) : "00") + 
-	    		 (rg[5] ? ":" + (rg[5] < 10?"0":"") + parseInt(rg[5]) : "00") + 
-	    		 (rg[7] ? ":" + (rg[7] < 10?"0":"") + parseInt(rg[7]) : "00") + "]";
+	    		 (rg[5] ? ":" + (rg[5] < 10?"0":"") + parseInt(rg[5]) : ":00") + 
+	    		 (rg[7] ? ":" + (rg[7] < 10?"0":"") + parseInt(rg[7]) : ":00") + "]";
     		respCb(response);
 
     	}
@@ -109,6 +112,7 @@ function getYoutubeLabel(video_id, respCb) {
 function getSpotifyLabel(video_id, respCb) {
 
 	var spotify_host = "https://api.spotify.com/v1/tracks/";
+
 
 
     request.get({
@@ -131,7 +135,45 @@ function getSpotifyLabel(video_id, respCb) {
 	});	
 }
 
+function getVimeoLabel(video_id, respCb) {
+	var vimeo_host = "https://api.vimeo.com/videos/"; 
+		
+	var auth_token = "https://api.vimeo.com/oauth/authorize/client?grant_type=client_credentials";
+	
+    request.post({
+        'url': auth_token,
+		headers: {
+			'Authorization': 'basic ' + Core.config.Modules.Titles.Vimeo
+		}
+    }, function(response, bdy, callback) {
+		bdy.body = JSON.parse(bdy.body);
+		
+		request.get({
+			'url': vimeo_host + video_id,
+			headers: {
+				'Authorization': 'Bearer ' + bdy.body.access_token
+			}
+		}, function(response, body, callback) {
 
+			var response = "[vimeo] ";
+
+			body.body = JSON.parse(body.body);
+			
+			if (! body.body.error) {
+				response += body.body.name;
+				response += " by " + body.body.user.name;
+				response += " [" + toHHMMSS(body.body.duration) + "]"; 
+				response += " [View count: " + body.body.stats.plays.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") + "]";
+				
+				respCb(response);  		
+			}
+
+
+
+		});	
+	});	
+	
+}
 
 
 function toHHMMSS(v) {

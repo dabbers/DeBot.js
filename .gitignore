@@ -34,3 +34,6 @@ src/storage/*
 *.pem
 src/modules/iHate.js
 src/modules/GitWebhook.js
+src/modules/PlexAnnounceTest.js
+src/modules/output2.txt
+src/modules/output.txt
