@@ -4,6 +4,7 @@ var PlexAPI = require("plex-api");
 function performCheck(bot) {
 	var client = new PlexAPI({
 		hostname: Core.config.Modules.PlexAnnounce.hostname,
+		port: 	  Core.config.Modules.PlexAnnounce.port,
 		username: Core.config.Modules.PlexAnnounce.username,
 		password: Core.config.Modules.PlexAnnounce.password,
 		options: {
@@ -75,9 +76,11 @@ function performUserList(bot) {
 	client.query("/pms/friends/all").then(function (result) {
 		var users = Core.config.Modules.PlexAnnounce.username + ", ";
 		var homeUsers = 0;
+		var total = 0;
 
 		for(var user in result.MediaContainer.User) {
 			var usr = result.MediaContainer.User[user];
+			total++;
 			if (usr.attributes.username) {
 				users += usr.attributes.title + ", ";
 			}
@@ -92,7 +95,7 @@ function performUserList(bot) {
 		bot.say(
 			Core.config.Modules.PlexAnnounce.network, 
 			Core.config.Modules.PlexAnnounce.channel, 
-			"[0,1PLE7,1X] Currently shared users: " + users
+			"[0,1PLE7,1X] Shared users (" + total + "): " + users
 		);
 
 	}, function (err) {

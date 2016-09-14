@@ -120,7 +120,7 @@ function Commandable() {
 			var group = self;
 
 			var channel = server.isChannel(msg.To.Parts[0]) ? 
-				server.Channels[msg.To.Parts[0]] : 
+				server.Channels[msg.To.Parts[0].toLowerCase()] : 
 				{"isChannel":false, "Display":msg.From.Parts[0], "Parts":["", "", msg.To.Parts[0]]};
 
 			if (!bot.isBot) {

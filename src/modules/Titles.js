@@ -14,6 +14,7 @@ var Urls = {
 	'open.spotify.com': [getSpotifyLabel, function(parse) { var pths = parse.pathname.split('/'); if (pths[1] == 'track') return pths[2]; } ],
 	'vimeo.com': [getVimeoLabel, function(parse) { return parse.pathname.substring(1); } ],
 	'www.vimeo.com': [getVimeoLabel, function(parse) { return parse.pathname.substring(1); } ],
+	'music.microsoft.com' : [getGrooveMusic, function(parse) { return parse.pathname.split('/')[2] } ],
 };
 
 
@@ -32,7 +33,13 @@ createlabel({"Parts":["", "", "", ":http://www.imdb.com/title/tt0944947/episodes
 createlabel({"Parts":["", "", "", ":http://www.imdb.com/title/tt3514324/?ref_=fn_al_tt_1"]});
 createlabel({"Parts":["", "", "", ":http://imdb.com/title/tt3514324/?ref_=fn_al_tt_1"]});
 createlabel({"Parts":["", "", "", ":https://vimeo.com/3568757"]}, function(d) { console.log(d);});
+createlabel({"Parts":["", "", "", ":https://music.microsoft.com/Track/4CC5C009-0100-11DB-89CA-0019B92A3933"]}, function(d) { console.log(d);});
+createlabel({"Parts":["", "", "", ":https://music.microsoft.com/Track/30100-11DB-89CA-0019B92A3933"]}, function(d) { console.log(d);});
+createlabel({"Parts":["", "", "", ":https://music.microsoft.com/Album/37C5C009-0100-11DB-89CA-0019B92A3933"]}, function(d) { console.log(d);});
+translateSpotify("The Lonley Island", "Trip to Spain", "Popstar: Never Stop Never Stopping", function(d) { console.log(d); } );
 */
+
+
 
 function createlabel(ircMsg, cb) {
 
@@ -49,7 +56,7 @@ function parseAndExecute(ur, cb) {
 		if (ur.substring(0,4) == "http") {
 
 			var uri = url.parse(ur, true);
-			console.log(uri);
+			//console.log(uri);
 
 			if (Urls[uri.host]) {
 				console.log('matched');
@@ -105,9 +112,6 @@ function getYoutubeLabel(video_id, respCb) {
 	});
 
 }
-
-
-
 
 function getSpotifyLabel(video_id, respCb) {
 
@@ -175,7 +179,6 @@ function getVimeoLabel(video_id, respCb) {
 	
 }
 
-
 function toHHMMSS(v) {
     var sec_num = parseInt(v, 10); // don't forget the second param
     var hours   = Math.floor(sec_num / 3600);
@@ -188,9 +191,6 @@ function toHHMMSS(v) {
     var time    = hours+':'+minutes+':'+seconds;
     return time;
 }
-
-
-
 
 function getImdbLabel(video_id, respCb) {
 
@@ -225,7 +225,73 @@ function getImdbLabel(video_id, respCb) {
 
 }
 
+function getGrooveMusic(video_id, respCb) {
+	//datamarket authentication endpoint, must be https
+	var service = "https://datamarket.accesscontrol.windows.net/v2/OAuth2-13";
 
+	//the clientId from step 5
+	var clientId = "dabot_irc_api";
+
+	//the secret from step 5
+	var clientSecret = Core.config.Modules.Titles.Groove;
+	var scope = "http://music.xboxlive.com";
+    var grantType = "client_credentials";
+
+	var postdata = { "client_id" : clientId,  "client_secret" : clientSecret, "scope" : scope, "grant_type" : grantType };
+
+	request.post( { url: service, form: postdata }, function(err,httpResponse,body) {
+		var at = encodeURIComponent(JSON.parse(body).access_token);
+
+		var url = "https://music.xboxlive.com/1/content/music." + video_id + "/lookup?accessToken=Bearer+" + at
+
+		request.get( {url: url },function(e,h,b) {
+			var re =  JSON.parse(b);
+			if (!re.Error && re.Tracks) {
+				var bb = re.Tracks.Items[0];
+				
+				var response = "[4,0Groove] ";
+				var artist = bb.Artists.map(function(artist) { return artist.Artist.Name; }).join(", ");
+
+				response += bb.Name;
+				response += " by " + artist;
+				response += " [" + bb.Duration + "]";  
+				respCb(response);
+				translateSpotify(artist, bb.Name, bb.Album.Name, respCb);
+			}  	
+		});
+
+	});
+
+
+}
+
+
+
+function translateSpotify(artist, title, album, respCb) {
+	var vimeo_host = "https://api.spotify.com/v1/search"; 	
+	var auth_token = "https://api.vimeo.com/oauth/authorize/client?grant_type=client_credentials";
+
+	request.get({
+		'url': vimeo_host + "?q=" + encodeURIComponent(title)  + "&type=track",
+	}, function(response, body, callback) {
+		var jsbody = JSON.parse(body.body);
+
+		var items = jsbody.tracks.items;
+
+		items.map(function(item) {
+			if (item.album.name == album) {
+				var anyArtists = item.artists.map(function(art) { return art.name == artist; })
+
+				if (anyArtists.length > 0) {
+					var url = item.external_urls.spotify;
+
+					var response = "[10Spotify] " + url;
+					respCb(response)
+				}
+			}
+			} );
+	});	
+}
 
 var _group = undefined;
 
